@@ -122,12 +122,12 @@ git clone <url-do-repositorio>
 
 ## Equipe
 
-| Nome                         | Função |
-| João Pedro Kloster Tolentino | Gerente do Projeto |
-| Ramon Albini                 | Back-End |
-| Eduardo Henrique Rodrigues   | Front-End |
-| Murilo Arruda                | Testes |
-| Murilo Meister               | Documentação |
+- | Nome                         | Função |
+- | João Pedro Kloster Tolentino | Gerente do Projeto |
+- | Ramon Albini                 | Back-End |
+- | Eduardo Henrique Rodrigues   | Front-End |
+- | Murilo Arruda                | Testes |
+- | Murilo Meister               | Documentação |
 
 
 ## Licença
