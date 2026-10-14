@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
   return (
-    <main className="flex min-h-full bg-[hsl(0,0%,97%)] items-center justify-center px-6 py-12">
+    <main className="flex min-h-full bg-[hsl(0,0%,97%)] dark:bg-[hsl(217,33%,5%)] items-center justify-center px-6 py-12">
       <section
         role="alert"
         className="w-full max-w-lg rounded-2xl border border-border bg-card p-10 text-center shadow-sm"
