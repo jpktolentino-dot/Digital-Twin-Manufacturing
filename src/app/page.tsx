@@ -1,4 +1,4 @@
-import { RobotArm } from "lucide-react"
+import { RobotArm,Sun } from "lucide-react"
 
 
 export default function Home() {
@@ -8,7 +8,7 @@ export default function Home() {
 
         <div className='absolute right-4 top-4'>
           <button  aria-label="Alternar tema" className="relative flex items-center justify-center cursor-pointer p-2 rounded-full border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200">
-
+            <Sun></Sun>
           </button>
         </div>
         <section className="h-screen w-full p-4 flex justify-center items-center">
@@ -25,12 +25,12 @@ export default function Home() {
             <form className="space-y-6" >
               <div className="space-y-1 flex flex-col gap-1">
                 <label className="text-sm font-medium text-slate-700 ml-1 dark:text-zinc-300">Usuário</label>
-                <input data-slot="input" required className="flex h-9 w-full min-w-0 border px-3 py-1 text-base shadow-xs outline-none transition-[color,box-shadow,border] selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground md:text-sm bg-input/30 border-zinc-300 rounded-md focus-visible:border-(--lightCyan) focus-visible:ring-(--lightCyan)/30 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive" id="login" max="254" placeholder="aluno@exemplo.com" type="text" autoComplete="off" name="login"></input>
+                <input data-slot="input" required className="flex h-9 w-full min-w-0 border px-3 py-1 text-base shadow-xs outline-none transition-[color,box-shadow,border] selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground md:text-sm bg-input/30 border-zinc-300 rounded-md focus-visible:border-(--lightCyan) focus-visible:ring-(--lightCyan)/30 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive" id="login" max="254" placeholder="usuário@exemplo.com" type="text" autoComplete="off" name="login"></input>
               </div>
 
               <div className="space-y-1 flex flex-col gap-1" >
                 <label className="text-sm font-medium text-slate-700 ml-1 dark:text-zinc-300">Senha</label>
-                <input data-slot="input" required className="flex h-9 w-full min-w-0 border px-3 py-1 text-base shadow-xs outline-none transition-[color,box-shadow,border] selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground md:text-sm bg-input/30 border-zinc-300 rounded-md focus-visible:border-(--lightCyan) focus-visible:ring-(--lightCyan)/30 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive" id="login" max="254" placeholder="aluno@exemplo.com" type="text" autoComplete="off" name="login"></input>
+                <input data-slot="input" required className="flex h-9 w-full min-w-0 border px-3 py-1 text-base shadow-xs outline-none transition-[color,box-shadow,border] selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground md:text-sm bg-input/30 border-zinc-300 rounded-md focus-visible:border-(--lightCyan) focus-visible:ring-(--lightCyan)/30 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive" id="login" max="254" placeholder="••••••••" type="password" autoComplete="off" name="login"></input>
               </div>
 
               <button type="submit" className="w-full py-3 px-4 flex justify-center bg-blue-700 hover:bg-violet-900 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transform active:scale-[0.98] transition-all cursor-pointer dark:bg-blue-700 dark:hover:bg-blue-500 dark:shadow-none"> Entrar </button>

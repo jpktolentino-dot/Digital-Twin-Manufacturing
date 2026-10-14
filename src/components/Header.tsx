@@ -8,7 +8,7 @@ function Header() {
     return (
         <>
             <header className="top-0 sticky z-60 w-full bg-background pointer-events-auto ">
-                <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-4">
+                <div className="max-w-full mx-auto border-b border-slate-800 px-4 sm:px-6 lg:px-4 ">
                     <div className="flex items-center justify-between md:justify-around h-16 md:grid md:grid-cols-3">
 
                         <div className="flex justify-self-start items-center gap-3">
@@ -31,7 +31,7 @@ function Header() {
                             <div className="relative w-full max-w-xs">
                                 <Input
                                     type="search"
-                                    placeholder="Buscar..."
+                                    placeholder="Buscar por id ou nome..."
                                     className="pr-10"
                                 />
                                 <button
@@ -41,6 +41,9 @@ function Header() {
                                 >
                                     <Search className="size-4" />
                                 </button>
+                            </div>
+                            <div className='size-8 flex justify-center items-center bg-gray-700 rounded-full'>
+                                E
                             </div>
                         </div>
                     </div>
