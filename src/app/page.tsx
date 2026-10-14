@@ -1,22 +1,22 @@
+
 import { RobotArm,Sun } from "lucide-react"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 
 export default function Home() {
     return (
     <>
-      <section className="w-screen h-screen flex overflow-hidden dark:bg-zinc-950 transition-colors duration-300 relative">
+      <section className="w-screen h-screen flex overflow-hidden dark:bg-zinc-950 bg-[#f0f0f0] transition-colors duration-300 relative">
 
         <div className='absolute right-4 top-4'>
-          <button  aria-label="Alternar tema" className="relative flex items-center justify-center cursor-pointer p-2 rounded-full border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200">
-            <Sun></Sun>
-          </button>
+          <ThemeToggle />
         </div>
         <section className="h-screen w-full p-4 flex justify-center items-center">
-          <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl border border-slate-400 dark:bg-zinc-900 dark:border-zinc-800">
+          <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl border border-zinc-400 dark:bg-zinc-900 dark:border-zinc-800">
             <div className="text-center flex items-center justify-center flex-col space-y-2">
               {/* <img  alt="logo" className='w-32 dark:brightness-110' /> */}
               <div className="bg-blue-700 w-18 aspect-square relative flex items-center justify-center rounded-xl">
-                  <RobotArm size={36} />
+                  <RobotArm size={36} className="text-white" />
               </div>
               <h2 className="text-3xl font-bold text-slate-900 dark:text-zinc-100">Acesse o Sistema</h2>
               <p className="text-slate-500 text-sm dark:text-zinc-400">Entre com suas credenciais do sistema</p>

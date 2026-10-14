@@ -7,7 +7,7 @@ export default function App() {
         <div className="h-screen flex flex-col bg-slate-950">
 
             <div className="flex flex-1 overflow-hidden">
-                <div className="w-[380px] p-8 bg-slate-950 border-r-2 border-slate-800 flex-shrink-0 overflow-hidden ">
+                <div className="w-[380px] p-8 bg-white dark:bg-slate-950 border-r-2 border-zinc-400 dark:border-slate-800 shrink-0 overflow-hidden ">
                     <div className="mb-4">
                         <h1 className="text-[1.3rem] font-bold">
                             Nome da máquina
@@ -16,7 +16,7 @@ export default function App() {
                             Id da máquina
                         </p>
                     </div>
-                    <div className="p-4 border-2 bg-slate-900 border-slate-600 rounded-2xl">
+                    <div className="p-4 border-2 bg-gray-100 dark:bg-slate-900 border-zinc-300 dark:border-slate-600 rounded-2xl">
                         <div className="flex justify-between">
                             <div className="space-y-3 ">
                                 <p>Informação 1</p>
@@ -34,34 +34,34 @@ export default function App() {
                     </div>
                 </div>
 
-                <div className="flex-1 flex items-center justify-center bg-slate-900 relative overflow-hidden">
+                <div className="flex-1 flex items-center justify-center bg-zinc-300 dark:bg-slate-900 relative overflow-hidden">
                     <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-20" />
                     <div className="relative text-center z-10">
-                        <div className="bg-slate-800 p-12 flex flex-col items-center space-y-5 rounded-2xl border-2 border-slate-700 shadow-2xl mb-6 ">
+                        <div className="dark:bg-slate-800 bg-zinc-100 p-12 flex flex-col items-center space-y-5 rounded-2xl border-2 border-zinc-400 dark:border-slate-700 shadow-2xl mb-6 ">
                             <span>
-                                <BuildingComplex size={110} />
+                                <BuildingComplex size={110}  />
                             </span>
 
                             <div>
-                                <h2 className="text-2xl text-white mb-2">Área de integração 3D</h2>
-                                <p className="text-base text-slate-400">Acompanhe a máquina em tempo real</p>
+                                <h2 className="text-2xl text-zinc-900 dark:text-white mb-2">Área de integração 3D</h2>
+                                <p className="text-base text-zinc-400 dark:text-slate-400">Acompanhe a máquina em tempo real</p>
                             </div>
 
                         </div>
                         <div className="flex items-center justify-center gap-3">
                             <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
-                            <p className="text-sm text-slate-500">Pronto para mostrar a imagem</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-500">Pronto para mostrar a imagem</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="w-[380px] bg-slate-950 border-l-2 border-slate-800 flex-shrink-0 overflow-hidden p-6">
+                <div className="w-[380px] bg-white dark:bg-slate-950 border-l-2 border-zinc-400 dark:border-slate-800 shrink-0 overflow-hidden p-6">
                     <div className="space-y-10">
 
                         <h1 className="text-[1.3rem] font-bold mb-4">
                             Ordem de produção
                         </h1>
-                        <div className="p-4 border-2 bg-slate-900 border-slate-600 rounded-2xl">
+                        <div className="p-4 border-2 bg-gray-100 dark:bg-slate-900 border-zinc-300 dark:border-slate-600 rounded-2xl">
                             <div className="flex justify-between">
                                 <div className="space-y-3 ">
                                     <p>Número</p>
@@ -80,7 +80,7 @@ export default function App() {
                         <h1 className="text-[1.3rem] font-bold mb-4">
                             Produto
                         </h1>
-                        <div className="p-4 border-2 bg-slate-900 border-slate-600 rounded-2xl">
+                        <div className="p-4 border-2 bg-gray-100 dark:bg-slate-900 border-zinc-300 dark:border-slate-600 rounded-2xl">
                             <div className="flex justify-between">
                                 <div className="space-y-3 font-bold">
                                     <p>Id</p>

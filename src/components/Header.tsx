@@ -1,20 +1,36 @@
-import { RobotArm } from 'lucide-react'
+'use client';
+import { RobotArm, LogOut } from 'lucide-react'
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useTheme } from 'next-themes';
+import { Sun, Moon } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 
 
 function Header() {
 
+    const { resolvedTheme, setTheme } = useTheme();
+
+    const isDark = resolvedTheme === "dark";
+
     return (
         <>
-            <header className="top-0 sticky z-60 w-full bg-background pointer-events-auto ">
-                <div className="max-w-full mx-auto border-b border-slate-800 px-4 sm:px-6 lg:px-4 ">
+            <header className="top-0 sticky w-full bg-background pointer-events-auto ">
+                <div className="max-w-full mx-auto border-b dark:border-slate-800 border-zinc-400 px-4 sm:px-6 lg:px-4 ">
                     <div className="flex items-center justify-between md:justify-around h-16 md:grid md:grid-cols-3">
 
                         <div className="flex justify-self-start items-center gap-3">
 
                             <div className='bg-blue-500 p-2 rounded-lg'>
-                                <RobotArm />
+                                <RobotArm className='text-white' />
                             </div>
                             <div>
                                 <h1 className='text-xl'>
@@ -42,9 +58,30 @@ function Header() {
                                     <Search className="size-4" />
                                 </button>
                             </div>
-                            <div className='size-8 flex justify-center items-center bg-gray-700 rounded-full'>
-                                E
-                            </div>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger
+                                    render={
+                                        <button
+                                            type="button"
+                                            aria-label="Abrir menu do usuário"
+                                            className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-gray-700 text-white outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        />
+                                    }
+                                >
+                                    E
+                                </DropdownMenuTrigger>
+
+                                <DropdownMenuContent align="end" className="w-48 z-100 ">
+                                    <DropdownMenuItem onClick={() => setTheme(isDark ? "light" : "dark")} className="cursor-pointer">
+                                        {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+                                        {isDark ? "Tema claro" : "Tema escuro"}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-red-600 cursor-pointer">
+                                        <LogOut/>
+                                        Logout
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     </div>
                 </div>
