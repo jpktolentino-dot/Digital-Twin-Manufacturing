@@ -61,8 +61,7 @@ function Header() {
                             <DropdownMenu>
                                 <DropdownMenuTrigger
                                     render={
-                                        <button
-                                            type="button"
+                                        <div
                                             aria-label="Abrir menu do usuário"
                                             className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-gray-700 text-white outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         />
