@@ -1,6 +1,13 @@
 
 import { BuildingComplex } from "lucide-react";
-export default function App() {
+import { getMachineInfo } from "../services/machine-service";
+
+
+export default async function App() {
+
+    const [info] = await Promise.all([
+        getMachineInfo(),
+    ]);
 
 
     return (
@@ -16,19 +23,17 @@ export default function App() {
                             Id da máquina
                         </p>
                     </div>
-                    <div className="p-4 border-2 bg-gray-100 dark:bg-slate-900 border-zinc-300 dark:border-slate-600 rounded-2xl">
+                    <div className="p-4 border bg-gray-100 dark:bg-slate-900 border-zinc-300 dark:border-slate-600 rounded-2xl">
                         <div className="flex justify-between">
                             <div className="space-y-3 ">
-                                <p>Informação 1</p>
-                                <p>Informação 2</p>
-                                <p>Informação 3</p>
-                                <p>Informação 4</p>
+                                {info.map((item) => (
+                                    <p key={item.id}>{item.label}</p>
+                                ))}
                             </div>
-                            <div className="text-end space-y-3">
-                                <p>55</p>
-                                <p>234</p>
-                                <p>10</p>
-                                <p>30</p>
+                            <div className="space-y-3 text-end">
+                                {info.map((item) => (
+                                    <p key={item.id}>{item.value}</p>
+                                ))}
                             </div>
                         </div>
                     </div>
@@ -39,7 +44,7 @@ export default function App() {
                     <div className="relative text-center z-10">
                         <div className="dark:bg-slate-800 bg-zinc-100 p-12 flex flex-col items-center space-y-5 rounded-2xl border-2 border-zinc-400 dark:border-slate-700 shadow-2xl mb-6 ">
                             <span>
-                                <BuildingComplex size={110}  />
+                                <BuildingComplex size={110} />
                             </span>
 
                             <div>
@@ -61,9 +66,9 @@ export default function App() {
                         <h1 className="text-[1.3rem] font-bold mb-4">
                             Ordem de produção
                         </h1>
-                        <div className="p-4 border-2 bg-gray-100 dark:bg-slate-900 border-zinc-300 dark:border-slate-600 rounded-2xl">
+                        <div className="p-4 border bg-gray-100 dark:bg-slate-900 border-zinc-300 dark:border-slate-600 rounded-2xl">
                             <div className="flex justify-between">
-                                <div className="space-y-3 ">
+                                 <div className="space-y-3 ">
                                     <p>Número</p>
                                     <p>Estágio atual</p>
                                     <p>Produto_id</p>
@@ -80,7 +85,7 @@ export default function App() {
                         <h1 className="text-[1.3rem] font-bold mb-4">
                             Produto
                         </h1>
-                        <div className="p-4 border-2 bg-gray-100 dark:bg-slate-900 border-zinc-300 dark:border-slate-600 rounded-2xl">
+                        <div className="p-4 border bg-gray-100 dark:bg-slate-900 border-zinc-300 dark:border-slate-600 rounded-2xl">
                             <div className="flex justify-between">
                                 <div className="space-y-3 font-bold">
                                     <p>Id</p>
