@@ -37,6 +37,7 @@ class MaquinaServiceTest {
     private MaquinaEntity maquina;
 
     @BeforeEach
+    @SuppressWarnings("unused")
     void setUp() {
         setor = new SetorEntity();
         setor.setId(1L);
