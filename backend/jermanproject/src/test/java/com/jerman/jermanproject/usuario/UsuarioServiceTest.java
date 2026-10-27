@@ -109,7 +109,7 @@ class UsuarioServiceTest {
                 "Operador Atualizado",
                 "novo@exemplo.com",
                 "",
-                "OP",
+                TipoUsuario.OPERADOR,
                 false
         );
 
@@ -143,8 +143,8 @@ class UsuarioServiceTest {
         UsuarioUpdateRequest request = new UsuarioUpdateRequest(
                 "Operador",
                 "outro@exemplo.com",
-                "OP",
                 "",
+                TipoUsuario.OPERADOR,
                 true
         );
 
