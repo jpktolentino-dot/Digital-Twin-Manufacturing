@@ -36,7 +36,7 @@ public class SecurityConfig {
 
                 // Permite criar a primeira conta de operador
                 .requestMatchers(
-                    HttpMethod.POST,
+                    HttpMethod.PUT,
                     "/api/usuarios"
                 ).permitAll()
 

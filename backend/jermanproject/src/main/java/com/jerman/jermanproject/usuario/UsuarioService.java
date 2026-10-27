@@ -87,6 +87,14 @@ public class UsuarioService {
         usuario.setEmail(email);
         usuario.setAtivo(request.ativo());
 
+        TipoUsuario tipo = TipoUsuario.OPERADOR;
+        if(request.tipoUsuario().equals("ADM")) {
+                tipo = TipoUsuario.ADMINISTRADOR;
+        }else if (request.tipoUsuario().equals("OP")) {
+                tipo = TipoUsuario.OPERADOR;
+        }
+        usuario.setTipo(tipo);
+
         if (request.senha() != null
                 && !request.senha().isBlank()) {
             usuario.setSenhaHash(

@@ -23,6 +23,8 @@ public record UsuarioUpdateRequest(
         )
         String senha,
 
+        String tipoUsuario,
+
         @NotNull
         Boolean ativo
 ) {}
