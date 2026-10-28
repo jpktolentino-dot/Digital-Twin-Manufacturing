@@ -1,7 +1,5 @@
 package com.jerman.jermanproject.setor; 
 
-import org.hibernate.annotations.SQLRestriction;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,7 +12,6 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "setor")
-@SQLRestriction("ativo = true")
 @Getter
 @Setter
 @NoArgsConstructor

@@ -1,5 +1,7 @@
 package com.jerman.jermanproject.maquina;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MaquinaRepository
@@ -11,4 +13,6 @@ public interface MaquinaRepository
             String codigo,
             Long id
     );
+
+    List<MaquinaEntity> findAllBySetor_Id(Long setorId);
 }

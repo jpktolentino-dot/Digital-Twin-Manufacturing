@@ -1,7 +1,5 @@
 package com.jerman.jermanproject.maquina;
 
-import org.hibernate.annotations.SQLRestriction;
-
 import com.jerman.jermanproject.setor.SetorEntity;
 
 import jakarta.persistence.Column;
@@ -21,7 +19,6 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "maquina")
-@SQLRestriction("ativo = true")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -51,7 +48,7 @@ public class MaquinaEntity {
     // Referência temporária até a implementação do módulo usuario.
     @Column(name = "operador_id", nullable = false)
     private Long operadorId;
-    
+
     @Column(nullable = false, columnDefinition = "boolean default true")
     private boolean ativo = true;
 }

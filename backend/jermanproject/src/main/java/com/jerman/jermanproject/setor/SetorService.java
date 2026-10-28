@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.jerman.jermanproject.maquina.MaquinaEntity;
+import com.jerman.jermanproject.maquina.MaquinaRepository;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -14,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 public class SetorService {
 
     private final SetorRepository setorRepository;
+    private final MaquinaRepository maquinaRepository;
+
 
     @Transactional(readOnly = true)
     public List<SetorEntity> listarTodos() {
@@ -70,8 +75,16 @@ public class SetorService {
     public void desativar(Long id) {
         SetorEntity setor = buscarPorId(id);
 
-        setor.setAtivo(false);
+        List<MaquinaEntity> maquinas =
+                maquinaRepository.findAllBySetor_Id(id);
 
+        for (MaquinaEntity maquina : maquinas) {
+            maquina.setAtivo(false);
+        }
+
+        maquinaRepository.saveAll(maquinas);
+
+        setor.setAtivo(false);
         setorRepository.save(setor);
     }
 
