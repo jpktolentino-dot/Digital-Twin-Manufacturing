@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.jerman.jermanproject.historicomaquina.HistoricoMaquinaService;
 import com.jerman.jermanproject.setor.SetorEntity;
 import com.jerman.jermanproject.setor.SetorRepository;
 
@@ -19,6 +20,7 @@ public class MaquinaService {
 
     private final MaquinaRepository maquinaRepository;
     private final SetorRepository setorRepository;
+    private final HistoricoMaquinaService historicoMaquinaService;
 
     @Transactional(readOnly = true)
     public List<MaquinaEntity> listarTodas() {
@@ -62,6 +64,7 @@ public class MaquinaService {
     @Transactional
     public MaquinaEntity atualizar(Long id, MaquinaRequest request) {
         MaquinaEntity maquina = buscarPorId(id);
+        EstadoMaquina estadoAnterior = maquina.getEstadoAtual();
         String codigo = request.codigo().trim();
 
         if (maquinaRepository.existsByCodigoIgnoreCaseAndIdNot(
@@ -76,7 +79,30 @@ public class MaquinaService {
 
         preencherMaquina(maquina, request, setor, codigo);
 
-        return maquinaRepository.save(maquina);
+        return salvarComHistoricoSeEstadoAlterado(
+                maquina,
+                estadoAnterior
+        );
+    }
+
+    @Transactional
+    public MaquinaEntity alterarEstado(
+            Long id,
+            EstadoMaquina novoEstado
+    ) {
+        MaquinaEntity maquina = buscarPorId(id);
+
+        if (maquina.getEstadoAtual() == novoEstado) {
+            return maquina;
+        }
+
+        EstadoMaquina estadoAnterior = maquina.getEstadoAtual();
+        maquina.setEstadoAtual(novoEstado);
+
+        return salvarComHistoricoSeEstadoAlterado(
+                maquina,
+                estadoAnterior
+        );
     }
 
     @Transactional
@@ -102,6 +128,23 @@ public class MaquinaService {
         maquina.setAtivo(true);
 
         maquinaRepository.save(maquina);
+    }
+
+    private MaquinaEntity salvarComHistoricoSeEstadoAlterado(
+            MaquinaEntity maquina,
+            EstadoMaquina estadoAnterior
+    ) {
+        MaquinaEntity salva = maquinaRepository.save(maquina);
+
+        if (estadoAnterior != salva.getEstadoAtual()) {
+            historicoMaquinaService.registrarTransicao(
+                    salva,
+                    estadoAnterior,
+                    salva.getEstadoAtual()
+            );
+        }
+
+        return salva;
     }
 
     private void verificarCodigoDuplicado(String codigo) {

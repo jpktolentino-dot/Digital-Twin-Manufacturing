@@ -1,3 +1,4 @@
+
 package com.jerman.jermanproject.maquina;
 
 import java.util.List;
@@ -32,7 +33,7 @@ public class MaquinaController {
     public ResponseEntity<List<MaquinaEntity>> listarTodas() {
         return ResponseEntity.ok(maquinaService.listarTodas());
     }
-    
+
     @GetMapping("/setor/{setorId}")
     @Operation(summary = "Listar máquinas de um setor")
     public ResponseEntity<List<MaquinaEntity>> listarPorSetor(
@@ -69,6 +70,20 @@ public class MaquinaController {
     ) {
         return ResponseEntity.ok(
                 maquinaService.atualizar(id, request)
+        );
+    }
+
+    @PatchMapping("/{id}/estado")
+    @Operation(summary = "Alterar o estado operacional de uma máquina")
+    public ResponseEntity<MaquinaEntity> alterarEstado(
+            @PathVariable Long id,
+            @Valid @RequestBody AlterarEstadoMaquinaRequest request
+    ) {
+        return ResponseEntity.ok(
+                maquinaService.alterarEstado(
+                        id,
+                        request.estadoAtual()
+                )
         );
     }
 
