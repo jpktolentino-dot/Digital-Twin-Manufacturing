@@ -54,14 +54,20 @@ public class UsuarioService {
         usuario.setSenhaHash(
                 passwordEncoder.encode(request.senha())
         );
-        usuario.setTipo(TipoUsuario.OPERADOR);
+
+        boolean primeiroUsuario = usuarioRepository.count() == 0;
+        usuario.setTipo(
+                primeiroUsuario
+                        ? TipoUsuario.ADMINISTRADOR
+                        : TipoUsuario.OPERADOR
+        );
         usuario.setAtivo(true);
 
         UsuarioEntity salvo = usuarioRepository.save(usuario);
 
         return toResponse(salvo);
     }
-
+    
     @Transactional
     public UsuarioResponse atualizar(
             Long id,
@@ -101,19 +107,34 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void excluir(Long id) {
-        UsuarioEntity usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Usuário não encontrado."
-                ));
+    public void desativar(Long id) {
+        UsuarioEntity usuario = buscarUsuarioEntityPorId(id);
 
-        usuarioRepository.delete(usuario);
+        usuario.setAtivo(false);
+
+        usuarioRepository.save(usuario);
+    }
+
+    @Transactional
+    public void ativar(Long id) {
+        UsuarioEntity usuario = buscarUsuarioEntityPorId(id);
+
+        usuario.setAtivo(true);
+
+        usuarioRepository.save(usuario);
     }
 
     private String normalizarEmail(String email) {
         return email.trim().toLowerCase(Locale.ROOT);
     }
+
+    private UsuarioEntity buscarUsuarioEntityPorId(Long id) {
+    return usuarioRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Usuário não encontrado."
+            ));
+}
 
     private UsuarioResponse toResponse(UsuarioEntity usuario) {
         return new UsuarioResponse(

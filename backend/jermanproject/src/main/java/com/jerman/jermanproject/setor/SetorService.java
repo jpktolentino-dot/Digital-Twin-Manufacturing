@@ -67,8 +67,21 @@ public class SetorService {
     }
 
     @Transactional
-    public void excluir(Long id) {
+    public void desativar(Long id) {
         SetorEntity setor = buscarPorId(id);
-        setorRepository.delete(setor);
+
+        setor.setAtivo(false);
+
+        setorRepository.save(setor);
     }
+
+    @Transactional
+    public void ativar(Long id) {
+        SetorEntity setor = buscarPorId(id);
+
+        setor.setAtivo(true);
+
+        setorRepository.save(setor);
+    }
+
 }

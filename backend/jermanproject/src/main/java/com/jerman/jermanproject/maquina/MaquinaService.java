@@ -68,9 +68,21 @@ public class MaquinaService {
     }
 
     @Transactional
-    public void excluir(Long id) {
+    public void desativar(Long id) {
         MaquinaEntity maquina = buscarPorId(id);
-        maquinaRepository.delete(maquina);
+
+        maquina.setAtivo(false);
+
+        maquinaRepository.save(maquina);
+    }
+
+    @Transactional
+    public void ativar(Long id) {
+        MaquinaEntity maquina = buscarPorId(id);
+
+        maquina.setAtivo(true);
+
+        maquinaRepository.save(maquina);
     }
 
     private void verificarCodigoDuplicado(String codigo) {
