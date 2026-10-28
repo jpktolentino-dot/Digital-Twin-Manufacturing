@@ -1,29 +1,36 @@
 package com.jerman.jermanproject.setor;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+
+import com.jerman.jermanproject.maquina.MaquinaEntity;
+import com.jerman.jermanproject.maquina.MaquinaRepository;
 
 @ExtendWith(MockitoExtension.class)
 class SetorServiceTest {
 
     @Mock
     private SetorRepository setorRepository;
+    @Mock
+    private MaquinaRepository maquinaRepository;
 
     @InjectMocks
     private SetorService setorService;
@@ -152,12 +159,63 @@ class SetorServiceTest {
     }
 
     @Test
-    void deveExcluirSetor() {
+    void deveDesativarSetorEAsMaquinasVinculadas() {
+        MaquinaEntity maquinaAtiva = new MaquinaEntity();
+        maquinaAtiva.setId(10L);
+        maquinaAtiva.setAtivo(true);
+
+        MaquinaEntity maquinaJaInativa = new MaquinaEntity();
+        maquinaJaInativa.setId(11L);
+        maquinaJaInativa.setAtivo(false);
+
+        List<MaquinaEntity> maquinas = List.of(
+                maquinaAtiva,
+                maquinaJaInativa
+        );
+
         when(setorRepository.findById(1L))
                 .thenReturn(Optional.of(setor));
+        when(maquinaRepository.findAllBySetor_Id(1L))
+                .thenReturn(maquinas);
 
-        setorService.excluir(1L);
+        setorService.desativar(1L);
 
-        verify(setorRepository).delete(setor);
+        assertFalse(setor.isAtivo());
+        assertFalse(maquinaAtiva.isAtivo());
+        assertFalse(maquinaJaInativa.isAtivo());
+
+        verify(maquinaRepository).findAllBySetor_Id(1L);
+        verify(maquinaRepository).saveAll(maquinas);
+        verify(setorRepository).save(setor);
+    }
+
+    @Test
+    void naoDeveDesativarMaquinasQuandoSetorNaoExiste() {
+        when(setorRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> setorService.desativar(99L)
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        verifyNoInteractions(maquinaRepository);
+    }
+
+    @Test
+    void deveReativarSetorSemReativarAsMaquinas() {
+        setor.setAtivo(false);
+
+        when(setorRepository.findById(1L))
+                .thenReturn(Optional.of(setor));
+        when(setorRepository.save(any(SetorEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        setorService.ativar(1L);
+
+        assertTrue(setor.isAtivo());
+        verify(setorRepository).save(setor);
+        verifyNoInteractions(maquinaRepository);
     }
 }

@@ -1,3 +1,4 @@
+
 package com.jerman.jermanproject.usuario;
 
 import java.util.List;
@@ -28,12 +29,7 @@ public class UsuarioService {
 
     @Transactional(readOnly = true)
     public UsuarioResponse buscarPorId(Long id) {
-        UsuarioEntity usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Usuário não encontrado."
-                ));
-
+        UsuarioEntity usuario = buscarUsuarioEntityPorId(id);
         return toResponse(usuario);
     }
 
@@ -56,29 +52,26 @@ public class UsuarioService {
         );
 
         boolean primeiroUsuario = usuarioRepository.count() == 0;
+
         usuario.setTipo(
                 primeiroUsuario
                         ? TipoUsuario.ADMINISTRADOR
                         : TipoUsuario.OPERADOR
         );
+
         usuario.setAtivo(true);
 
         UsuarioEntity salvo = usuarioRepository.save(usuario);
 
         return toResponse(salvo);
     }
-    
+
     @Transactional
     public UsuarioResponse atualizar(
             Long id,
             UsuarioUpdateRequest request
     ) {
-        UsuarioEntity usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Usuário não encontrado."
-                ));
-
+        UsuarioEntity usuario = buscarUsuarioEntityPorId(id);
         String email = normalizarEmail(request.email());
 
         if (usuarioRepository
@@ -129,12 +122,12 @@ public class UsuarioService {
     }
 
     private UsuarioEntity buscarUsuarioEntityPorId(Long id) {
-    return usuarioRepository.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Usuário não encontrado."
-            ));
-}
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Usuário não encontrado."
+                ));
+    }
 
     private UsuarioResponse toResponse(UsuarioEntity usuario) {
         return new UsuarioResponse(

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -30,6 +31,16 @@ public class MaquinaController {
     @Operation(summary = "Listar todas as máquinas")
     public ResponseEntity<List<MaquinaEntity>> listarTodas() {
         return ResponseEntity.ok(maquinaService.listarTodas());
+    }
+    
+    @GetMapping("/setor/{setorId}")
+    @Operation(summary = "Listar máquinas de um setor")
+    public ResponseEntity<List<MaquinaEntity>> listarPorSetor(
+            @PathVariable Long setorId
+    ) {
+        return ResponseEntity.ok(
+                maquinaService.listarPorSetor(setorId)
+        );
     }
 
     @GetMapping("/{id}")
@@ -62,9 +73,20 @@ public class MaquinaController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Excluir máquina")
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
-        maquinaService.excluir(id);
+    @Operation(summary = "Desativar máquina")
+    public ResponseEntity<Void> desativar(
+            @PathVariable Long id
+    ) {
+        maquinaService.desativar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/ativar")
+    @Operation(summary = "Reativar máquina")
+    public ResponseEntity<Void> ativar(
+            @PathVariable Long id
+    ) {
+        maquinaService.ativar(id);
         return ResponseEntity.noContent().build();
     }
 }

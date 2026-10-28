@@ -1,3 +1,4 @@
+
 package com.jerman.jermanproject.maquina;
 
 import java.util.List;
@@ -33,13 +34,24 @@ public class MaquinaService {
                 ));
     }
 
+    @Transactional(readOnly = true)
+    public List<MaquinaEntity> listarPorSetor(Long setorId) {
+        setorRepository.findById(setorId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Setor não encontrado."
+                ));
+
+        return maquinaRepository.findAllBySetor_Id(setorId);
+    }
+
     @Transactional
     public MaquinaEntity criar(MaquinaRequest request) {
         String codigo = request.codigo().trim();
 
         verificarCodigoDuplicado(codigo);
 
-        SetorEntity setor = buscarSetor(request.setorId());
+        SetorEntity setor = buscarSetorAtivo(request.setorId());
 
         MaquinaEntity maquina = new MaquinaEntity();
         preencherMaquina(maquina, request, setor, codigo);
@@ -60,7 +72,7 @@ public class MaquinaService {
             );
         }
 
-        SetorEntity setor = buscarSetor(request.setorId());
+        SetorEntity setor = buscarSetorAtivo(request.setorId());
 
         preencherMaquina(maquina, request, setor, codigo);
 
@@ -80,6 +92,13 @@ public class MaquinaService {
     public void ativar(Long id) {
         MaquinaEntity maquina = buscarPorId(id);
 
+        if (!maquina.getSetor().isAtivo()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Não é possível ativar uma máquina vinculada a um setor inativo."
+            );
+        }
+
         maquina.setAtivo(true);
 
         maquinaRepository.save(maquina);
@@ -94,12 +113,21 @@ public class MaquinaService {
         }
     }
 
-    private SetorEntity buscarSetor(Long setorId) {
-        return setorRepository.findById(setorId)
+    private SetorEntity buscarSetorAtivo(Long setorId) {
+        SetorEntity setor = setorRepository.findById(setorId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Setor não encontrado."
                 ));
+
+        if (!setor.isAtivo()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Não é possível associar uma máquina a um setor inativo."
+            );
+        }
+
+        return setor;
     }
 
     private void preencherMaquina(

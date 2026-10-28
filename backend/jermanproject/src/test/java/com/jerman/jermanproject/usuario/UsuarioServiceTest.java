@@ -1,5 +1,7 @@
+
 package com.jerman.jermanproject.usuario;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,6 +35,29 @@ class UsuarioServiceTest {
     private UsuarioService usuarioService;
 
     @Test
+    void deveListarUsuariosAtivosEInativos() {
+        UsuarioEntity ativo = novoUsuario(
+                1L,
+                "ativo@exemplo.com"
+        );
+
+        UsuarioEntity inativo = novoUsuario(
+                2L,
+                "inativo@exemplo.com"
+        );
+        inativo.setAtivo(false);
+
+        when(usuarioRepository.findAll())
+                .thenReturn(List.of(ativo, inativo));
+
+        List<UsuarioResponse> resposta = usuarioService.listar();
+
+        assertEquals(2, resposta.size());
+        assertTrue(resposta.get(0).ativo());
+        assertFalse(resposta.get(1).ativo());
+    }
+
+    @Test
     void deveCadastrarUsuarioComSenhaCodificada() {
         UsuarioRequest request = new UsuarioRequest(
                 "Operador Teste",
@@ -43,6 +68,45 @@ class UsuarioServiceTest {
         when(usuarioRepository
                 .existsByEmailIgnoreCase("operador@exemplo.com"))
                 .thenReturn(false);
+
+        // Já existe um usuário, então este será OPERADOR.
+        when(usuarioRepository.count()).thenReturn(1L);
+
+        when(passwordEncoder.encode("Senha123!"))
+                .thenReturn("hash-da-senha");
+
+        when(usuarioRepository.save(any(UsuarioEntity.class)))
+                .thenAnswer(invocation -> {
+                    UsuarioEntity usuario = invocation.getArgument(0);
+                    usuario.setId(2L);
+                    return usuario;
+                });
+
+        UsuarioResponse resposta = usuarioService.criar(request);
+
+        assertEquals(2L, resposta.id());
+        assertEquals("Operador Teste", resposta.nome());
+        assertEquals("operador@exemplo.com", resposta.email());
+        assertEquals(TipoUsuario.OPERADOR, resposta.tipo());
+        assertTrue(resposta.ativo());
+
+        verify(passwordEncoder).encode("Senha123!");
+        verify(usuarioRepository).save(any(UsuarioEntity.class));
+    }
+
+    @Test
+    void deveCadastrarPrimeiroUsuarioComoAdministrador() {
+        UsuarioRequest request = new UsuarioRequest(
+                "Administrador",
+                "admin@exemplo.com",
+                "Senha123!"
+        );
+
+        when(usuarioRepository
+                .existsByEmailIgnoreCase("admin@exemplo.com"))
+                .thenReturn(false);
+
+        when(usuarioRepository.count()).thenReturn(0L);
 
         when(passwordEncoder.encode("Senha123!"))
                 .thenReturn("hash-da-senha");
@@ -56,11 +120,10 @@ class UsuarioServiceTest {
 
         UsuarioResponse resposta = usuarioService.criar(request);
 
-        assertEquals(1L, resposta.id());
-        assertEquals("operador@exemplo.com", resposta.email());
-        assertEquals(TipoUsuario.OPERADOR, resposta.tipo());
+        assertEquals(TipoUsuario.ADMINISTRADOR, resposta.tipo());
         assertTrue(resposta.ativo());
 
+        verify(usuarioRepository).count();
         verify(passwordEncoder).encode("Senha123!");
     }
 
@@ -81,8 +144,31 @@ class UsuarioServiceTest {
                 () -> usuarioService.criar(request)
         );
 
-        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
-        verify(usuarioRepository, never()).save(any());
+        assertEquals(
+                HttpStatus.CONFLICT,
+                exception.getStatusCode()
+        );
+
+        verify(usuarioRepository, never())
+                .save(any(UsuarioEntity.class));
+    }
+
+    @Test
+    void deveBuscarUsuarioPorId() {
+        UsuarioEntity existente = novoUsuario(
+                1L,
+                "operador@exemplo.com"
+        );
+
+        when(usuarioRepository.findById(1L))
+                .thenReturn(Optional.of(existente));
+
+        UsuarioResponse resposta = usuarioService.buscarPorId(1L);
+
+        assertEquals(1L, resposta.id());
+        assertEquals("operador@exemplo.com", resposta.email());
+        assertEquals(TipoUsuario.OPERADOR, resposta.tipo());
+        assertTrue(resposta.ativo());
     }
 
     @Test
@@ -95,7 +181,10 @@ class UsuarioServiceTest {
                 () -> usuarioService.buscarPorId(99L)
         );
 
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals(
+                HttpStatus.NOT_FOUND,
+                exception.getStatusCode()
+        );
     }
 
     @Test
@@ -117,7 +206,10 @@ class UsuarioServiceTest {
                 .thenReturn(Optional.of(existente));
 
         when(usuarioRepository
-                .existsByEmailIgnoreCaseAndIdNot("novo@exemplo.com", 1L))
+                .existsByEmailIgnoreCaseAndIdNot(
+                        "novo@exemplo.com",
+                        1L
+                ))
                 .thenReturn(false);
 
         when(usuarioRepository.save(any(UsuarioEntity.class)))
@@ -131,6 +223,7 @@ class UsuarioServiceTest {
         assertFalse(resposta.ativo());
 
         verify(passwordEncoder, never()).encode(anyString());
+        verify(usuarioRepository).save(existente);
     }
 
     @Test
@@ -153,7 +246,8 @@ class UsuarioServiceTest {
 
         when(usuarioRepository
                 .existsByEmailIgnoreCaseAndIdNot(
-                        "outro@exemplo.com", 1L
+                        "outro@exemplo.com",
+                        1L
                 ))
                 .thenReturn(true);
 
@@ -162,11 +256,17 @@ class UsuarioServiceTest {
                 () -> usuarioService.atualizar(1L, request)
         );
 
-        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+        assertEquals(
+                HttpStatus.CONFLICT,
+                exception.getStatusCode()
+        );
+
+        verify(usuarioRepository, never())
+                .save(any(UsuarioEntity.class));
     }
 
     @Test
-    void deveExcluirUsuarioExistente() {
+    void deveDesativarUsuarioSemExcluirFisicamente() {
         UsuarioEntity existente = novoUsuario(
                 1L,
                 "operador@exemplo.com"
@@ -175,9 +275,74 @@ class UsuarioServiceTest {
         when(usuarioRepository.findById(1L))
                 .thenReturn(Optional.of(existente));
 
-        usuarioService.excluir(1L);
+        when(usuarioRepository.save(any(UsuarioEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        verify(usuarioRepository).delete(existente);
+        usuarioService.desativar(1L);
+
+        assertFalse(existente.isAtivo());
+
+        verify(usuarioRepository).save(existente);
+        verify(usuarioRepository, never()).delete(existente);
+    }
+
+    @Test
+    void deveReativarUsuario() {
+        UsuarioEntity existente = novoUsuario(
+                1L,
+                "operador@exemplo.com"
+        );
+        existente.setAtivo(false);
+
+        when(usuarioRepository.findById(1L))
+                .thenReturn(Optional.of(existente));
+
+        when(usuarioRepository.save(any(UsuarioEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        usuarioService.ativar(1L);
+
+        assertTrue(existente.isAtivo());
+
+        verify(usuarioRepository).save(existente);
+    }
+
+    @Test
+    void naoDeveDesativarUsuarioInexistente() {
+        when(usuarioRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> usuarioService.desativar(99L)
+        );
+
+        assertEquals(
+                HttpStatus.NOT_FOUND,
+                exception.getStatusCode()
+        );
+
+        verify(usuarioRepository, never())
+                .save(any(UsuarioEntity.class));
+    }
+
+    @Test
+    void naoDeveAtivarUsuarioInexistente() {
+        when(usuarioRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> usuarioService.ativar(99L)
+        );
+
+        assertEquals(
+                HttpStatus.NOT_FOUND,
+                exception.getStatusCode()
+        );
+
+        verify(usuarioRepository, never())
+                .save(any(UsuarioEntity.class));
     }
 
     private UsuarioEntity novoUsuario(Long id, String email) {
@@ -188,6 +353,7 @@ class UsuarioServiceTest {
         usuario.setSenhaHash("hash-existente");
         usuario.setTipo(TipoUsuario.OPERADOR);
         usuario.setAtivo(true);
+
         return usuario;
     }
 }

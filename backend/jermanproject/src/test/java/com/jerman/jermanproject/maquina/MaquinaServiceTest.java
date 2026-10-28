@@ -1,14 +1,18 @@
+
 package com.jerman.jermanproject.maquina;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.never;
@@ -37,12 +41,12 @@ class MaquinaServiceTest {
     private MaquinaEntity maquina;
 
     @BeforeEach
-    @SuppressWarnings("unused")
     void setUp() {
         setor = new SetorEntity();
         setor.setId(1L);
         setor.setNome("Usinagem");
         setor.setCodigo("USI");
+        setor.setAtivo(true);
 
         maquina = new MaquinaEntity();
         maquina.setId(10L);
@@ -52,6 +56,7 @@ class MaquinaServiceTest {
         maquina.setEstadoAtual(EstadoMaquina.PARADA);
         maquina.setSetor(setor);
         maquina.setOperadorId(2L);
+        maquina.setAtivo(true);
     }
 
     private MaquinaRequest criarRequest(
@@ -80,7 +85,72 @@ class MaquinaServiceTest {
 
         assertEquals(1, resultado.size());
         assertEquals("Torno CNC", resultado.get(0).getNome());
+
         verify(maquinaRepository).findAll();
+    }
+
+    @Test
+    void deveListarMaquinasPorSetor() {
+        MaquinaEntity maquinaInativa = new MaquinaEntity();
+        maquinaInativa.setId(11L);
+        maquinaInativa.setNome("Fresa CNC");
+        maquinaInativa.setCodigo("MAQ-02");
+        maquinaInativa.setSetor(setor);
+        maquinaInativa.setAtivo(false);
+
+        when(setorRepository.findById(1L))
+                .thenReturn(Optional.of(setor));
+
+        when(maquinaRepository.findAllBySetor_Id(1L))
+                .thenReturn(List.of(maquina, maquinaInativa));
+
+        List<MaquinaEntity> resultado =
+                maquinaService.listarPorSetor(1L);
+
+        assertEquals(2, resultado.size());
+        assertEquals(10L, resultado.get(0).getId());
+        assertEquals(11L, resultado.get(1).getId());
+
+        assertTrue(resultado.get(0).isAtivo());
+        assertFalse(resultado.get(1).isAtivo());
+
+        verify(setorRepository).findById(1L);
+        verify(maquinaRepository).findAllBySetor_Id(1L);
+    }
+
+    @Test
+    void deveRetornarListaVaziaQuandoSetorNaoPossuiMaquinas() {
+        when(setorRepository.findById(1L))
+                .thenReturn(Optional.of(setor));
+
+        when(maquinaRepository.findAllBySetor_Id(1L))
+                .thenReturn(List.of());
+
+        List<MaquinaEntity> resultado =
+                maquinaService.listarPorSetor(1L);
+
+        assertTrue(resultado.isEmpty());
+
+        verify(maquinaRepository).findAllBySetor_Id(1L);
+    }
+
+    @Test
+    void naoDeveListarMaquinasQuandoSetorNaoExiste() {
+        when(setorRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> maquinaService.listarPorSetor(99L)
+        );
+
+        assertEquals(
+                HttpStatus.NOT_FOUND,
+                exception.getStatusCode()
+        );
+
+        verify(maquinaRepository, never())
+                .findAllBySetor_Id(anyLong());
     }
 
     @Test
@@ -105,7 +175,10 @@ class MaquinaServiceTest {
                 () -> maquinaService.buscarPorId(99L)
         );
 
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals(
+                HttpStatus.NOT_FOUND,
+                exception.getStatusCode()
+        );
     }
 
     @Test
@@ -133,6 +206,7 @@ class MaquinaServiceTest {
         assertEquals("FRE-01", resultado.getCodigo());
         assertEquals(1L, resultado.getSetor().getId());
         assertEquals(2L, resultado.getOperadorId());
+        assertTrue(resultado.isAtivo());
 
         verify(maquinaRepository).save(any(MaquinaEntity.class));
     }
@@ -150,8 +224,13 @@ class MaquinaServiceTest {
                 () -> maquinaService.criar(request)
         );
 
-        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
-        verify(maquinaRepository, never()).save(any(MaquinaEntity.class));
+        assertEquals(
+                HttpStatus.CONFLICT,
+                exception.getStatusCode()
+        );
+
+        verify(maquinaRepository, never())
+                .save(any(MaquinaEntity.class));
     }
 
     @Test
@@ -170,14 +249,24 @@ class MaquinaServiceTest {
                 () -> maquinaService.criar(request)
         );
 
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-        verify(maquinaRepository, never()).save(any(MaquinaEntity.class));
+        assertEquals(
+                HttpStatus.NOT_FOUND,
+                exception.getStatusCode()
+        );
+
+        verify(maquinaRepository, never())
+                .save(any(MaquinaEntity.class));
     }
 
     @Test
     void deveAtualizarMaquina() {
         MaquinaRequest request =
-                criarRequest("Torno CNC atualizado", "MAQ-01", 1L, 2L);
+                criarRequest(
+                        "Torno CNC atualizado",
+                        "MAQ-01",
+                        1L,
+                        2L
+                );
 
         when(maquinaRepository.findById(10L))
                 .thenReturn(Optional.of(maquina));
@@ -218,17 +307,64 @@ class MaquinaServiceTest {
                 () -> maquinaService.atualizar(10L, request)
         );
 
-        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
-        verify(maquinaRepository, never()).save(any(MaquinaEntity.class));
+        assertEquals(
+                HttpStatus.CONFLICT,
+                exception.getStatusCode()
+        );
+
+        verify(maquinaRepository, never())
+                .save(any(MaquinaEntity.class));
     }
 
     @Test
-    void deveExcluirMaquina() {
+    void deveDesativarMaquina() {
         when(maquinaRepository.findById(10L))
                 .thenReturn(Optional.of(maquina));
 
-        maquinaService.excluir(10L);
+        when(maquinaRepository.save(any(MaquinaEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        verify(maquinaRepository).delete(maquina);
+        maquinaService.desativar(10L);
+
+        assertFalse(maquina.isAtivo());
+
+        verify(maquinaRepository).save(maquina);
+        verify(maquinaRepository, never()).delete(maquina);
+    }
+
+    @Test
+    void deveAtivarMaquinaQuandoSetorEstaAtivo() {
+        maquina.setAtivo(false);
+
+        when(maquinaRepository.findById(10L))
+                .thenReturn(Optional.of(maquina));
+
+        when(maquinaRepository.save(any(MaquinaEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        maquinaService.ativar(10L);
+
+        assertTrue(maquina.isAtivo());
+
+        verify(maquinaRepository).save(maquina);
+    }
+
+    @Test
+    void naoDeveDesativarMaquinaInexistente() {
+        when(maquinaRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> maquinaService.desativar(99L)
+        );
+
+        assertEquals(
+                HttpStatus.NOT_FOUND,
+                exception.getStatusCode()
+        );
+
+        verify(maquinaRepository, never())
+                .save(any(MaquinaEntity.class));
     }
 }
