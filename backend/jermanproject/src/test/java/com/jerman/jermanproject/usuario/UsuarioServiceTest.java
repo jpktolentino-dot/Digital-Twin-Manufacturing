@@ -19,6 +19,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -30,6 +31,9 @@ class UsuarioServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private JdbcTemplate jdbcTemplate;
 
     @InjectMocks
     private UsuarioService usuarioService;
@@ -69,9 +73,6 @@ class UsuarioServiceTest {
                 .existsByEmailIgnoreCase("operador@exemplo.com"))
                 .thenReturn(false);
 
-        // Já existe um usuário, então este será OPERADOR.
-        when(usuarioRepository.count()).thenReturn(1L);
-
         when(passwordEncoder.encode("Senha123!"))
                 .thenReturn("hash-da-senha");
 
@@ -95,18 +96,17 @@ class UsuarioServiceTest {
     }
 
     @Test
-    void deveCadastrarPrimeiroUsuarioComoAdministrador() {
+    void deveCadastrarUsuarioComoAdministradorQuandoSolicitado() {
         UsuarioRequest request = new UsuarioRequest(
-                "Administrador",
-                "admin@exemplo.com",
-                "Senha123!"
+                "Administrador Secundário",
+                "admin2@exemplo.com",
+                "Senha123!",
+                TipoUsuario.ADMINISTRADOR
         );
 
         when(usuarioRepository
-                .existsByEmailIgnoreCase("admin@exemplo.com"))
+                .existsByEmailIgnoreCase("admin2@exemplo.com"))
                 .thenReturn(false);
-
-        when(usuarioRepository.count()).thenReturn(0L);
 
         when(passwordEncoder.encode("Senha123!"))
                 .thenReturn("hash-da-senha");
@@ -114,7 +114,7 @@ class UsuarioServiceTest {
         when(usuarioRepository.save(any(UsuarioEntity.class)))
                 .thenAnswer(invocation -> {
                     UsuarioEntity usuario = invocation.getArgument(0);
-                    usuario.setId(1L);
+                    usuario.setId(2L);
                     return usuario;
                 });
 
@@ -123,8 +123,57 @@ class UsuarioServiceTest {
         assertEquals(TipoUsuario.ADMINISTRADOR, resposta.tipo());
         assertTrue(resposta.ativo());
 
-        verify(usuarioRepository).count();
+        verify(usuarioRepository, never()).count();
         verify(passwordEncoder).encode("Senha123!");
+    }
+
+    @Test
+    void deveCriarPrimeiroAdministradorPeloSetupQuandoBancoVazio() {
+        CadastroInicialRequest request = new CadastroInicialRequest(
+                "Administrador Inicial",
+                "ADMIN@EXEMPLO.COM",
+                "Senha123!"
+        );
+
+        when(usuarioRepository.count()).thenReturn(0L);
+        when(passwordEncoder.encode("Senha123!"))
+                .thenReturn("hash-da-senha");
+        when(usuarioRepository.save(any(UsuarioEntity.class)))
+                .thenAnswer(invocation -> {
+                    UsuarioEntity usuario = invocation.getArgument(0);
+                    usuario.setId(1L);
+                    return usuario;
+                });
+
+        UsuarioResponse resposta =
+                usuarioService.criarAdministradorInicial(request);
+
+        assertEquals(TipoUsuario.ADMINISTRADOR, resposta.tipo());
+        assertEquals("admin@exemplo.com", resposta.email());
+        verify(jdbcTemplate).execute("LOCK TABLE usuario IN EXCLUSIVE MODE");
+        verify(usuarioRepository).count();
+        verify(usuarioRepository).save(any(UsuarioEntity.class));
+    }
+
+    @Test
+    void naoDeveCriarOutroAdministradorPeloSetupDepoisDoPrimeiroCadastro() {
+        CadastroInicialRequest request = new CadastroInicialRequest(
+                "Segundo Administrador",
+                "admin2@exemplo.com",
+                "Senha123!"
+        );
+
+        when(usuarioRepository.count()).thenReturn(1L);
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> usuarioService.criarAdministradorInicial(request)
+        );
+
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+        verify(jdbcTemplate).execute("LOCK TABLE usuario IN EXCLUSIVE MODE");
+        verify(usuarioRepository, never()).save(any(UsuarioEntity.class));
+        verify(passwordEncoder, never()).encode(anyString());
     }
 
     @Test

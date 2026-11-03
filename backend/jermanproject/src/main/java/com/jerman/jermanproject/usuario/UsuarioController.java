@@ -45,7 +45,10 @@ public class UsuarioController {
     }
 
     @PostMapping
-    @Operation(summary = "Cadastrar usuário")
+    @Operation(
+            summary = "Cadastrar usuário",
+            description = "Requer autenticação com perfil ADMINISTRADOR. O perfil pode ser OPERADOR ou ADMINISTRADOR."
+    )
     public ResponseEntity<UsuarioResponse> criar(
             @Valid @RequestBody UsuarioRequest request
     ) {
