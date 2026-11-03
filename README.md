@@ -103,22 +103,71 @@ Sugestões de stack (a confirmar):
 - **Simulação:** Serviço/worker responsável pela geração de dados simulados dos equipamentos
 - **Visualização:** Biblioteca de gráficos (ex.: Chart.js, D3.js, Recharts)
 
-## Instalação e Execução
+# Executar o JERMAN com Docker
 
-> *Seção a ser preenchida conforme a stack definida pela equipe.*
+## Pré-requisitos
+
+- Git instalado.
+- Docker Desktop instalado e em execução.
+
+Não é necessário instalar Java, Maven ou PostgreSQL separadamente.
+
+## Como executar
+
+**1. Clone o repositório**
 
 ```bash
-# Clonar o repositório
-git clone <url-do-repositorio>
-
-# Instalar dependências
-# (instruções específicas do backend e frontend)
-
-# Configurar variáveis de ambiente
-# (ex.: conexão com banco de dados)
-
-# Executar a aplicação
+git clone URL_DO_REPOSITORIO
 ```
+
+Substitua `URL_DO_REPOSITORIO` pela URL real do projeto no GitHub.
+
+**2. Entre na pasta do backend**
+
+```bash
+cd Digital-Twin-Manufacturing-backend/backend/jermanproject
+```
+
+O nome da pasta raiz pode variar conforme o nome utilizado no repositório.
+
+**3. Inicie a aplicação**
+
+```bash
+docker compose -f compose.docker.yaml up --build -d
+```
+
+Na primeira execução, o Docker baixará as imagens necessárias, compilará a aplicação Java e iniciará o PostgreSQL.
+
+**4. Acesse a API**
+
+Swagger UI:
+
+http://localhost:8080/swagger-ui/index.html
+
+**5. Consulte os logs, se necessário**
+
+```bash
+docker compose -f compose.docker.yaml logs -f api
+```
+
+**6. Encerrar a aplicação**
+
+```bash
+docker compose -f compose.docker.yaml down
+```
+
+Os dados do banco ficam em um volume Docker local e são preservados ao encerrar os contêineres com o comando acima.
+
+## Primeiro acesso
+
+Cada instalação possui seu próprio banco de dados. Se o banco estiver vazio, cadastre o primeiro usuário pela API; ele receberá o perfil `ADMINISTRADOR` conforme a regra atual do backend. Em seguida, cadastre os demais usuários necessários.
+
+## Observações
+
+- Os dados criados em um computador não aparecem automaticamente no computador de outra pessoa.
+- As credenciais padrão do banco são destinadas somente ao desenvolvimento local.
+- Se a porta 8080 ou a porta 5433 já estiver ocupada, será necessário ajustar o mapeamento correspondente no arquivo Compose.
+
 
 ## Equipe
 
