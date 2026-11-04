@@ -21,6 +21,11 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     },
   });
 
+  if (res.status === 401) {
+    await fetch("/auth/logout", { method: "POST" });
+    throw new ApiError(401, "Sessão expirada.");
+  }
+
   if (!res.ok) {
     const erro = await res.json().catch(() => null);
     throw new ApiError(res.status, erro?.message ?? `Erro ${res.status}`);

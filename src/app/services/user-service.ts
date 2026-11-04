@@ -16,4 +16,6 @@ export const usuariosService = {
   desativar: (id: number) => api<void>(`/usuarios/${id}`, { method: "DELETE" }),
 
   ativar: (id: number) => api<void>(`/usuarios/${id}/ativar`, { method: "PATCH" }),
+  setup: (dados: UsuarioRequest) =>
+    api<Usuario>("/auth/setup", { method: "POST", body: JSON.stringify(dados) }),
 };

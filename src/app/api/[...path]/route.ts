@@ -15,7 +15,7 @@ async function handler(
     method: req.method,
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Basic ${token}` } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: ["GET", "HEAD"].includes(req.method) ? undefined : await req.text(),
     cache: "no-store",
