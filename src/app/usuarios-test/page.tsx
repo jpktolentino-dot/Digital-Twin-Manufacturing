@@ -1,8 +1,42 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usuariosService } from "../services/user-service";
 import type { TipoUsuario, Usuario } from "../types";
+
+const input =
+  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
+const btn =
+  "rounded-md px-3 py-1.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50";
+const btnPrimario = `${btn} bg-blue-600 text-white hover:bg-blue-700`;
+const btnSecundario = `${btn} border border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800`;
+const btnPerigo = `${btn} border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950`;
+
+function StatusBadge({ ativo }: { ativo: boolean }) {
+  return (
+    <span
+      className={`rounded-full px-2 py-0.5 text-xs font-medium ${ativo
+        ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
+        : "bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+        }`}
+    >
+      {ativo ? "Ativo" : "Inativo"}
+    </span>
+  );
+}
+
+function TipoBadge({ tipo }: { tipo: TipoUsuario }) {
+  return (
+    <span
+      className={`rounded-full px-2 py-0.5 text-xs font-medium ${tipo === "ADMINISTRADOR"
+        ? "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+        : "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+        }`}
+    >
+      {tipo}
+    </span>
+  );
+}
 
 export default function UsuariosPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -10,9 +44,8 @@ export default function UsuariosPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
 
-  // buscar por ID
-  const [idBusca, setIdBusca] = useState("");
-  const [encontrado, setEncontrado] = useState<Usuario | null>(null);
+
+  const [filtroId, setFiltroId] = useState("");
 
   // edição
   const [editando, setEditando] = useState<Usuario | null>(null);
@@ -48,13 +81,10 @@ export default function UsuariosPage() {
     carregar();
   }, [carregar]);
 
-  function buscarPorId(e: React.FormEvent) {
-    e.preventDefault();
-    setEncontrado(null);
-    executar(async () => {
-      setEncontrado(await usuariosService.buscarPorId(Number(idBusca)));
-    });
-  }
+  const visiveis = useMemo(() => {
+    const termo = filtroId.trim();
+    return termo ? usuarios.filter((u) => String(u.id) === termo) : usuarios;
+  }, [usuarios, filtroId]);
 
   function iniciarEdicao(u: Usuario) {
     setEditando(u);
@@ -95,64 +125,126 @@ export default function UsuariosPage() {
     }, `Usuário ${u.nome} reativado.`);
   }
 
-  const celula = { padding: "6px 10px", borderBottom: "1px solid #ddd", textAlign: "left" as const };
+  function Acoes({ u }: { u: Usuario }) {
+    return (
+      <div className="flex flex-wrap gap-2">
+        <button onClick={() => iniciarEdicao(u)} disabled={loading} className={btnSecundario}>
+          Editar
+        </button>
+        {u.ativo ? (
+          <button onClick={() => desativar(u)} disabled={loading} className={btnPerigo}>
+            Desativar
+          </button>
+        ) : (
+          <button onClick={() => ativar(u)} disabled={loading} className={btnSecundario}>
+            Reativar
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
-    <main style={{ maxWidth: 900, margin: "40px auto", display: "grid", gap: 20, padding: "0 16px" }}>
-      <h1>Usuários</h1>
+    <main className="mx-auto grid max-w-4xl gap-6 px-4 py-6 text-zinc-900 sm:py-10 dark:text-zinc-100">
+      <h1 className="text-xl font-semibold sm:text-2xl">Usuários</h1>
 
-      {erro && <p style={{ color: "crimson" }}>Erro: {erro}</p>}
-      {aviso && <p style={{ color: "green" }}>{aviso}</p>}
+      {erro && (
+        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+          Erro: {erro}
+        </p>
+      )}
+      {aviso && (
+        <p className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-300">
+          {aviso}
+        </p>
+      )}
 
-      {/* LISTAR */}
-      <section style={{ display: "grid", gap: 8 }}>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <h2 style={{ margin: 0 }}>Lista</h2>
-          <button onClick={carregar} disabled={loading}>
+      {/* FILTRO + LISTA */}
+      <section className="grid gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-lg font-medium">Lista</h2>
+          <button onClick={carregar} disabled={loading} className={btnSecundario}>
             {loading ? "Carregando..." : "Recarregar"}
           </button>
+          <div className="flex w-full gap-2 sm:ml-auto sm:w-auto">
+            <input
+              className={`${input} sm:w-40`}
+              type="number"
+              min={1}
+              placeholder="Filtrar por ID"
+              value={filtroId}
+              onChange={(e) => setFiltroId(e.target.value)}
+            />
+            {filtroId && (
+              <button onClick={() => setFiltroId("")} className={btnSecundario}>
+                Limpar
+              </button>
+            )}
+          </div>
         </div>
 
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ borderCollapse: "collapse", width: "100%" }}>
-            <thead>
+        {/* Cards (celular) */}
+        <ul className="grid gap-3 md:hidden">
+          {visiveis.map((u) => (
+            <li
+              key={u.id}
+              className="grid gap-2 rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{u.nome}</p>
+                  <p className="truncate text-sm text-zinc-600 dark:text-zinc-400">{u.email}</p>
+                </div>
+                <span className="text-xs text-zinc-500">#{u.id}</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <TipoBadge tipo={u.tipo} />
+                <StatusBadge ativo={u.ativo} />
+              </div>
+              <Acoes u={u} />
+            </li>
+          ))}
+          {visiveis.length === 0 && (
+            <li className="rounded-lg border border-dashed border-zinc-300 p-4 text-center text-sm text-zinc-500 dark:border-zinc-700">
+              {filtroId ? "Nenhum usuário com esse ID." : "Nenhum usuário carregado."}
+            </li>
+          )}
+        </ul>
+
+        {/* Tabela (md em diante) */}
+        <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 md:block dark:border-zinc-800">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-zinc-50 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
               <tr>
-                <th style={celula}>ID</th>
-                <th style={celula}>Nome</th>
-                <th style={celula}>E-mail</th>
-                <th style={celula}>Tipo</th>
-                <th style={celula}>Ativo</th>
-                <th style={celula}>Ações</th>
+                <th className="px-3 py-2 font-medium">ID</th>
+                <th className="px-3 py-2 font-medium">Nome</th>
+                <th className="px-3 py-2 font-medium">E-mail</th>
+                <th className="px-3 py-2 font-medium">Tipo</th>
+                <th className="px-3 py-2 font-medium">Status</th>
+                <th className="px-3 py-2 font-medium">Ações</th>
               </tr>
             </thead>
-            <tbody>
-              {usuarios.map((u) => (
+            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+              {visiveis.map((u) => (
                 <tr key={u.id}>
-                  <td style={celula}>{u.id}</td>
-                  <td style={celula}>{u.nome}</td>
-                  <td style={celula}>{u.email}</td>
-                  <td style={celula}>{u.tipo}</td>
-                  <td style={celula}>{u.ativo ? "Sim" : "Não"}</td>
-                  <td style={{ ...celula, display: "flex", gap: 6 }}>
-                    <button onClick={() => iniciarEdicao(u)} disabled={loading}>
-                      Editar
-                    </button>
-                    {u.ativo ? (
-                      <button onClick={() => desativar(u)} disabled={loading}>
-                        Desativar
-                      </button>
-                    ) : (
-                      <button onClick={() => ativar(u)} disabled={loading}>
-                        Reativar
-                      </button>
-                    )}
+                  <td className="px-3 py-2">{u.id}</td>
+                  <td className="px-3 py-2">{u.nome}</td>
+                  <td className="px-3 py-2">{u.email}</td>
+                  <td className="px-3 py-2">
+                    <TipoBadge tipo={u.tipo} />
+                  </td>
+                  <td className="px-3 py-2">
+                    <StatusBadge ativo={u.ativo} />
+                  </td>
+                  <td className="px-3 py-2">
+                    <Acoes u={u} />
                   </td>
                 </tr>
               ))}
-              {usuarios.length === 0 && (
+              {visiveis.length === 0 && (
                 <tr>
-                  <td style={celula} colSpan={6}>
-                    Nenhum usuário carregado.
+                  <td colSpan={6} className="px-3 py-4 text-center text-zinc-500">
+                    {filtroId ? "Nenhum usuário com esse ID." : "Nenhum usuário carregado."}
                   </td>
                 </tr>
               )}
@@ -161,48 +253,43 @@ export default function UsuariosPage() {
         </div>
       </section>
 
-      {/* BUSCAR POR ID */}
-      <section style={{ display: "grid", gap: 8 }}>
-        <h2 style={{ margin: 0 }}>Buscar por ID</h2>
-        <form onSubmit={buscarPorId} style={{ display: "flex", gap: 8 }}>
-          <input
-            type="number"
-            min={1}
-            placeholder="ID"
-            value={idBusca}
-            onChange={(e) => setIdBusca(e.target.value)}
-            required
-          />
-          <button disabled={loading}>Buscar</button>
-        </form>
-        {encontrado && <pre>{JSON.stringify(encontrado, null, 2)}</pre>}
-      </section>
+
 
       {/* EDITAR */}
       {editando && (
-        <section style={{ display: "grid", gap: 8 }}>
-          <h2 style={{ margin: 0 }}>Editar usuário #{editando.id}</h2>
-          <form onSubmit={salvarEdicao} style={{ display: "grid", gap: 8, maxWidth: 400 }}>
-            <input placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
-            <input type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <section className="grid gap-3">
+          <h2 className="text-lg font-medium">Editar usuário #{editando.id}</h2>
+          <form onSubmit={salvarEdicao} className="grid w-full gap-3 sm:max-w-md">
+            <input className={input} placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
             <input
+              className={input}
+              type="email"
+              placeholder="E-mail"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <input
+              className={input}
               type="password"
               placeholder="Nova senha (deixe vazio para manter)"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               maxLength={72}
             />
-            <select value={tipo} onChange={(e) => setTipo(e.target.value as TipoUsuario)}>
+            <select className={input} value={tipo} onChange={(e) => setTipo(e.target.value as TipoUsuario)}>
               <option value="OPERADOR">OPERADOR</option>
               <option value="ADMINISTRADOR">ADMINISTRADOR</option>
             </select>
-            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} />
               Ativo
             </label>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button disabled={loading}>Salvar</button>
-              <button type="button" onClick={() => setEditando(null)}>
+            <div className="flex gap-2">
+              <button disabled={loading} className={btnPrimario}>
+                Salvar
+              </button>
+              <button type="button" onClick={() => setEditando(null)} className={btnSecundario}>
                 Cancelar
               </button>
             </div>

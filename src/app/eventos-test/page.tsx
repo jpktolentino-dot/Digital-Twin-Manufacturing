@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { eventosService } from "../services/events-service";
 import { maquinasService } from "../services/maquina-service";
 import { ordensProducaoService } from "../services/production-order";
@@ -13,6 +13,8 @@ const btn =
   "rounded-md px-3 py-1.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50";
 const btnPrimario = `${btn} bg-blue-600 text-white hover:bg-blue-700`;
 const btnSecundario = `${btn} border border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800`;
+const selectPequeno =
+  "rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900";
 
 type Filtro = "todos" | "maquina" | "ordem";
 
@@ -21,6 +23,16 @@ function agoraLocal(): string {
   const d = new Date();
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().slice(0, 16);
+}
+
+const formatarData = (iso: string) => new Date(iso).toLocaleString("pt-BR");
+
+function CategoriaBadge({ valor }: { valor: string }) {
+  return (
+    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+      {valor}
+    </span>
+  );
 }
 
 export default function EventosPage() {
@@ -33,12 +45,10 @@ export default function EventosPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
 
-  // filtro da listagem
+  // filtros
   const [filtro, setFiltro] = useState<Filtro>("todos");
+  const [filtroRef, setFiltroRef] = useState("");
   const [filtroId, setFiltroId] = useState("");
-
-  const [idBusca, setIdBusca] = useState("");
-  const [encontrado, setEncontrado] = useState<Evento | null>(null);
 
   // formulário de registro
   const [categoria, setCategoria] = useState("");
@@ -64,14 +74,14 @@ export default function EventosPage() {
   }, []);
 
   const buscarLista = useCallback(() => {
-    if (filtro === "maquina" && filtroId) {
-      return eventosService.listarPorMaquina(Number(filtroId));
+    if (filtro === "maquina" && filtroRef) {
+      return eventosService.listarPorMaquina(Number(filtroRef));
     }
-    if (filtro === "ordem" && filtroId) {
-      return eventosService.listarPorOrdemProducao(Number(filtroId));
+    if (filtro === "ordem" && filtroRef) {
+      return eventosService.listarPorOrdemProducao(Number(filtroRef));
     }
     return eventosService.listar();
-  }, [filtro, filtroId]);
+  }, [filtro, filtroRef]);
 
   const carregar = useCallback(
     () =>
@@ -92,9 +102,14 @@ export default function EventosPage() {
     usuariosService.listar().then(setUsuarios).catch(() => {});
   }, []);
 
+  const visiveis = useMemo(() => {
+    const termo = filtroId.trim();
+    return termo ? eventos.filter((ev) => String(ev.id) === termo) : eventos;
+  }, [eventos, filtroId]);
+
   function trocarFiltro(novo: Filtro) {
     setFiltro(novo);
-    setFiltroId("");
+    setFiltroRef("");
   }
 
   function limparForm() {
@@ -124,19 +139,11 @@ export default function EventosPage() {
     }, "Evento registrado.");
   }
 
-  function buscarPorId(e: React.FormEvent) {
-    e.preventDefault();
-    setEncontrado(null);
-    executar(async () => {
-      setEncontrado(await eventosService.buscarPorId(Number(idBusca)));
-    });
-  }
-
-  const formatarData = (iso: string) => new Date(iso).toLocaleString("pt-BR");
+  const vazio = filtroId ? "Nenhum evento com esse ID." : "Nenhum evento carregado.";
 
   return (
-    <main className="mx-auto grid max-w-6xl gap-6 px-4 py-10 text-zinc-900 dark:text-zinc-100">
-      <h1 className="text-2xl font-semibold">Eventos industriais</h1>
+    <main className="mx-auto grid max-w-6xl gap-6 px-4 py-6 text-zinc-900 sm:py-10 dark:text-zinc-100">
+      <h1 className="text-xl font-semibold sm:text-2xl">Eventos industriais</h1>
 
       {erro && (
         <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
@@ -149,57 +156,100 @@ export default function EventosPage() {
         </p>
       )}
 
-      {/* LISTAR / FILTRAR */}
+      {/* FILTROS + LISTA */}
       <section className="grid gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <h2 className="text-lg font-medium">Lista</h2>
-
-          <select
-            className="rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-            value={filtro}
-            onChange={(e) => trocarFiltro(e.target.value as Filtro)}
-          >
-            <option value="todos">Todos os eventos</option>
-            <option value="maquina">Por máquina</option>
-            <option value="ordem">Por ordem de produção</option>
-          </select>
-
-          {filtro === "maquina" && (
-            <select
-              className="rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-              value={filtroId}
-              onChange={(e) => setFiltroId(e.target.value)}
-            >
-              <option value="">Selecione a máquina</option>
-              {maquinas.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.nome}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {filtro === "ordem" && (
-            <select
-              className="rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-              value={filtroId}
-              onChange={(e) => setFiltroId(e.target.value)}
-            >
-              <option value="">Selecione a ordem</option>
-              {ordens.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.numero}
-                </option>
-              ))}
-            </select>
-          )}
-
           <button onClick={carregar} disabled={loading} className={btnSecundario}>
             {loading ? "Carregando..." : "Recarregar"}
           </button>
+
+          <div className="flex w-full flex-wrap gap-2 sm:ml-auto sm:w-auto">
+            <select
+              className={`${selectPequeno} w-full sm:w-auto`}
+              value={filtro}
+              onChange={(e) => trocarFiltro(e.target.value as Filtro)}
+            >
+              <option value="todos">Todos os eventos</option>
+              <option value="maquina">Por máquina</option>
+              <option value="ordem">Por ordem de produção</option>
+            </select>
+
+            {filtro === "maquina" && (
+              <select
+                className={`${selectPequeno} w-full sm:w-auto`}
+                value={filtroRef}
+                onChange={(e) => setFiltroRef(e.target.value)}
+              >
+                <option value="">Selecione a máquina</option>
+                {maquinas.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.nome}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {filtro === "ordem" && (
+              <select
+                className={`${selectPequeno} w-full sm:w-auto`}
+                value={filtroRef}
+                onChange={(e) => setFiltroRef(e.target.value)}
+              >
+                <option value="">Selecione a ordem</option>
+                {ordens.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.numero}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            <input
+              className={`${input} flex-1 sm:w-40 sm:flex-none`}
+              type="number"
+              min={1}
+              placeholder="Filtrar por ID"
+              value={filtroId}
+              onChange={(e) => setFiltroId(e.target.value)}
+            />
+            {filtroId && (
+              <button onClick={() => setFiltroId("")} className={btnSecundario}>
+                Limpar
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
+        {/* Cards (celular) */}
+        <ul className="grid gap-3 md:hidden">
+          {visiveis.map((ev) => (
+            <li
+              key={ev.id}
+              className="grid gap-2 rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <CategoriaBadge valor={ev.categoria} />
+                <span className="text-xs text-zinc-500">#{ev.id}</span>
+              </div>
+              <p className="text-sm">{ev.descricao}</p>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                {formatarData(ev.dataHora)} · impacto {ev.impactoEstimado}
+              </p>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                {ev.maquinaNome} · ordem {ev.numeroOrdem} · {ev.usuarioNome}
+              </p>
+            </li>
+          ))}
+          {visiveis.length === 0 && (
+            <li className="rounded-lg border border-dashed border-zinc-300 p-4 text-center text-sm text-zinc-500 dark:border-zinc-700">
+              {vazio}
+            </li>
+          )}
+        </ul>
+
+        {/* Tabela (md em diante) */}
+        <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 md:block dark:border-zinc-800">
           <table className="w-full text-left text-sm">
             <thead className="bg-zinc-50 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
               <tr>
@@ -214,14 +264,12 @@ export default function EventosPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-              {eventos.map((ev) => (
+              {visiveis.map((ev) => (
                 <tr key={ev.id}>
                   <td className="px-3 py-2">{ev.id}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-xs">{formatarData(ev.dataHora)}</td>
                   <td className="px-3 py-2">
-                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                      {ev.categoria}
-                    </span>
+                    <CategoriaBadge valor={ev.categoria} />
                   </td>
                   <td
                     className="max-w-xs truncate px-3 py-2 text-zinc-600 dark:text-zinc-400"
@@ -235,10 +283,10 @@ export default function EventosPage() {
                   <td className="px-3 py-2">{ev.usuarioNome}</td>
                 </tr>
               ))}
-              {eventos.length === 0 && (
+              {visiveis.length === 0 && (
                 <tr>
                   <td colSpan={8} className="px-3 py-4 text-center text-zinc-500">
-                    Nenhum evento carregado.
+                    {vazio}
                   </td>
                 </tr>
               )}
@@ -250,7 +298,7 @@ export default function EventosPage() {
       {/* REGISTRAR */}
       <section className="grid gap-3">
         <h2 className="text-lg font-medium">Registrar evento</h2>
-        <form onSubmit={registrar} className="grid max-w-md gap-3">
+        <form onSubmit={registrar} className="grid w-full gap-3 sm:max-w-md">
           <input
             className={input}
             placeholder="Categoria (ex.: FALHA, PARADA, QUALIDADE)"
@@ -285,7 +333,12 @@ export default function EventosPage() {
               required
             />
           </label>
-          <select className={input} value={maquinaId} onChange={(e) => setMaquinaId(e.target.value)} required>
+          <select
+            className={input}
+            value={maquinaId}
+            onChange={(e) => setMaquinaId(e.target.value)}
+            required
+          >
             <option value="">Selecione a máquina</option>
             {maquinas
               .filter((m) => m.ativo)
@@ -295,7 +348,12 @@ export default function EventosPage() {
                 </option>
               ))}
           </select>
-          <select className={input} value={ordemId} onChange={(e) => setOrdemId(e.target.value)} required>
+          <select
+            className={input}
+            value={ordemId}
+            onChange={(e) => setOrdemId(e.target.value)}
+            required
+          >
             <option value="">Selecione a ordem de produção</option>
             {ordens.map((o) => (
               <option key={o.id} value={o.id}>
@@ -303,7 +361,12 @@ export default function EventosPage() {
               </option>
             ))}
           </select>
-          <select className={input} value={usuarioId} onChange={(e) => setUsuarioId(e.target.value)} required>
+          <select
+            className={input}
+            value={usuarioId}
+            onChange={(e) => setUsuarioId(e.target.value)}
+            required
+          >
             <option value="">Selecione o usuário</option>
             {usuarios
               .filter((u) => u.ativo)
@@ -322,30 +385,6 @@ export default function EventosPage() {
             </button>
           </div>
         </form>
-      </section>
-
-      {/* BUSCAR POR ID */}
-      <section className="grid gap-3">
-        <h2 className="text-lg font-medium">Buscar por ID</h2>
-        <form onSubmit={buscarPorId} className="flex max-w-sm gap-2">
-          <input
-            className={input}
-            type="number"
-            min={1}
-            placeholder="ID"
-            value={idBusca}
-            onChange={(e) => setIdBusca(e.target.value)}
-            required
-          />
-          <button disabled={loading} className={btnPrimario}>
-            Buscar
-          </button>
-        </form>
-        {encontrado && (
-          <pre className="overflow-x-auto rounded-md bg-zinc-100 p-3 text-xs dark:bg-zinc-900">
-            {JSON.stringify(encontrado, null, 2)}
-          </pre>
-        )}
       </section>
     </main>
   );

@@ -1,12 +1,29 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { maquinasService } from "../services/maquina-service";
 import { setoresService } from "../services/sectors-service";
 import type { EstadoMaquina, Maquina, Setor } from "../types";
 
-// Confirme os valores reais do enum EstadoMaquina no Swagger (Schemas)
 const ESTADOS: EstadoMaquina[] = ["OPERANDO", "PARADA", "FALHA", "MANUTENCAO"];
+
+const input =
+  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
+const btn =
+  "rounded-md px-3 py-1.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50";
+const btnPrimario = `${btn} bg-blue-600 text-white hover:bg-blue-700`;
+const btnSecundario = `${btn} border border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800`;
+const btnPerigo = `${btn} border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950`;
+const selectPequeno =
+  "rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900";
+
+const corEstado: Record<string, string> = {
+  OPERANDO: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300",
+  PARADA: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+  FALHA: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300",
+  MANUTENCAO: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+};
+const corPadrao = "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300";
 
 type Form = {
   nome: string;
@@ -26,16 +43,92 @@ const FORM_VAZIO: Form = {
   operadorId: "",
 };
 
+function EstadoBadge({ valor }: { valor: string }) {
+  return (
+    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${corEstado[valor] ?? corPadrao}`}>
+      {valor}
+    </span>
+  );
+}
+
+function StatusBadge({ ativo }: { ativo: boolean }) {
+  return (
+    <span
+      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+        ativo
+          ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
+          : "bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+      }`}
+    >
+      {ativo ? "Ativa" : "Inativa"}
+    </span>
+  );
+}
+
+function EstadoSelect({
+  m,
+  disabled,
+  onChange,
+}: {
+  m: Maquina;
+  disabled: boolean;
+  onChange: (m: Maquina, estado: EstadoMaquina) => void;
+}) {
+  return (
+    <select
+      className={selectPequeno}
+      value={m.estadoAtual}
+      onChange={(e) => onChange(m, e.target.value as EstadoMaquina)}
+      disabled={disabled}
+    >
+      {ESTADOS.map((s) => (
+        <option key={s} value={s}>
+          {s}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function Acoes({
+  m,
+  disabled,
+  onEditar,
+  onDesativar,
+  onAtivar,
+}: {
+  m: Maquina;
+  disabled: boolean;
+  onEditar: (m: Maquina) => void;
+  onDesativar: (m: Maquina) => void;
+  onAtivar: (m: Maquina) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <button onClick={() => onEditar(m)} disabled={disabled} className={btnSecundario}>
+        Editar
+      </button>
+      {m.ativo ? (
+        <button onClick={() => onDesativar(m)} disabled={disabled} className={btnPerigo}>
+          Desativar
+        </button>
+      ) : (
+        <button onClick={() => onAtivar(m)} disabled={disabled} className={btnSecundario}>
+          Reativar
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function MaquinasPage() {
   const [maquinas, setMaquinas] = useState<Maquina[]>([]);
   const [setores, setSetores] = useState<Setor[]>([]);
   const [filtroSetor, setFiltroSetor] = useState("");
+  const [filtroId, setFiltroId] = useState("");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
-
-  const [idBusca, setIdBusca] = useState("");
-  const [encontrada, setEncontrada] = useState<Maquina | null>(null);
 
   // formulário compartilhado entre criar e editar
   const [editandoId, setEditandoId] = useState<number | null>(null);
@@ -78,6 +171,11 @@ export default function MaquinasPage() {
   useEffect(() => {
     setoresService.listar().then(setSetores).catch(() => {});
   }, []);
+
+  const visiveis = useMemo(() => {
+    const termo = filtroId.trim();
+    return termo ? maquinas.filter((m) => String(m.id) === termo) : maquinas;
+  }, [maquinas, filtroId]);
 
   function atualizarCampo<K extends keyof Form>(campo: K, valor: Form[K]) {
     setForm((f) => ({ ...f, [campo]: valor }));
@@ -144,96 +242,146 @@ export default function MaquinasPage() {
     }, `Máquina ${m.nome} reativada.`);
   }
 
-  function buscarPorId(e: React.FormEvent) {
-    e.preventDefault();
-    setEncontrada(null);
-    executar(async () => {
-      setEncontrada(await maquinasService.buscarPorId(Number(idBusca)));
-    });
-  }
-
-  const celula = { padding: "6px 10px", borderBottom: "1px solid #ddd", textAlign: "left" as const };
+  const vazio = filtroId ? "Nenhuma máquina com esse ID." : "Nenhuma máquina carregada.";
 
   return (
-    <main style={{ maxWidth: 1000, margin: "40px auto", display: "grid", gap: 20, padding: "0 16px" }}>
-      <h1>Máquinas</h1>
+    <main className="mx-auto grid max-w-6xl gap-6 px-4 py-6 text-zinc-900 sm:py-10 dark:text-zinc-100">
+      <h1 className="text-xl font-semibold sm:text-2xl">Máquinas</h1>
 
-      {erro && <p style={{ color: "crimson" }}>Erro: {erro}</p>}
-      {aviso && <p style={{ color: "green" }}>{aviso}</p>}
+      {erro && (
+        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+          Erro: {erro}
+        </p>
+      )}
+      {aviso && (
+        <p className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-300">
+          {aviso}
+        </p>
+      )}
 
-      {/* LISTAR / FILTRAR POR SETOR */}
-      <section style={{ display: "grid", gap: 8 }}>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-          <h2 style={{ margin: 0 }}>Lista</h2>
-          <select value={filtroSetor} onChange={(e) => setFiltroSetor(e.target.value)}>
-            <option value="">Todos os setores</option>
-            {setores.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.nome}
-              </option>
-            ))}
-          </select>
-          <button onClick={carregar} disabled={loading}>
+      {/* FILTROS + LISTA */}
+      <section className="grid gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-lg font-medium">Lista</h2>
+          <button onClick={carregar} disabled={loading} className={btnSecundario}>
             {loading ? "Carregando..." : "Recarregar"}
           </button>
+
+          <div className="flex w-full flex-wrap gap-2 sm:ml-auto sm:w-auto">
+            <select
+              className={`${selectPequeno} w-full sm:w-auto`}
+              value={filtroSetor}
+              onChange={(e) => setFiltroSetor(e.target.value)}
+            >
+              <option value="">Todos os setores</option>
+              {setores.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.nome}
+                </option>
+              ))}
+            </select>
+            <input
+              className={`${input} flex-1 sm:w-40 sm:flex-none`}
+              type="number"
+              min={1}
+              placeholder="Filtrar por ID"
+              value={filtroId}
+              onChange={(e) => setFiltroId(e.target.value)}
+            />
+            {filtroId && (
+              <button onClick={() => setFiltroId("")} className={btnSecundario}>
+                Limpar
+              </button>
+            )}
+          </div>
         </div>
 
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ borderCollapse: "collapse", width: "100%" }}>
-            <thead>
+        {/* Cards (celular) */}
+        <ul className="grid gap-3 md:hidden">
+          {visiveis.map((m) => (
+            <li
+              key={m.id}
+              className="grid gap-2 rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{m.nome}</p>
+                  <p className="truncate font-mono text-xs text-zinc-600 dark:text-zinc-400">
+                    {m.codigo}
+                  </p>
+                </div>
+                <span className="text-xs text-zinc-500">#{m.id}</span>
+              </div>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                Setor: {m.setor?.nome ?? "-"} · Operador: {m.operadorId ?? "-"}
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusBadge ativo={m.ativo} />
+                <EstadoSelect m={m} disabled={loading} onChange={alterarEstado} />
+              </div>
+              <Acoes
+                m={m}
+                disabled={loading}
+                onEditar={iniciarEdicao}
+                onDesativar={desativar}
+                onAtivar={ativar}
+              />
+            </li>
+          ))}
+          {visiveis.length === 0 && (
+            <li className="rounded-lg border border-dashed border-zinc-300 p-4 text-center text-sm text-zinc-500 dark:border-zinc-700">
+              {vazio}
+            </li>
+          )}
+        </ul>
+
+        {/* Tabela (md em diante) */}
+        <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 md:block dark:border-zinc-800">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-zinc-50 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
               <tr>
-                <th style={celula}>ID</th>
-                <th style={celula}>Nome</th>
-                <th style={celula}>Código</th>
-                <th style={celula}>Setor</th>
-                <th style={celula}>Estado</th>
-                <th style={celula}>Operador</th>
-                <th style={celula}>Ativa</th>
-                <th style={celula}>Ações</th>
+                <th className="px-3 py-2 font-medium">ID</th>
+                <th className="px-3 py-2 font-medium">Nome</th>
+                <th className="px-3 py-2 font-medium">Código</th>
+                <th className="px-3 py-2 font-medium">Setor</th>
+                <th className="px-3 py-2 font-medium">Estado</th>
+                <th className="px-3 py-2 font-medium">Operador</th>
+                <th className="px-3 py-2 font-medium">Status</th>
+                <th className="px-3 py-2 font-medium">Ações</th>
               </tr>
             </thead>
-            <tbody>
-              {maquinas.map((m) => (
+            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+              {visiveis.map((m) => (
                 <tr key={m.id}>
-                  <td style={celula}>{m.id}</td>
-                  <td style={celula}>{m.nome}</td>
-                  <td style={celula}>{m.codigo}</td>
-                  <td style={celula}>{m.setor?.nome}</td>
-                  <td style={celula}>
-                    <select
-                      value={m.estadoAtual}
-                      onChange={(e) => alterarEstado(m, e.target.value as EstadoMaquina)}
-                      disabled={loading}
-                    >
-                      {ESTADOS.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
+                  <td className="px-3 py-2">{m.id}</td>
+                  <td className="px-3 py-2">{m.nome}</td>
+                  <td className="px-3 py-2 font-mono text-xs">{m.codigo}</td>
+                  <td className="px-3 py-2">{m.setor?.nome ?? "-"}</td>
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <EstadoBadge valor={m.estadoAtual} />
+                      <EstadoSelect m={m} disabled={loading} onChange={alterarEstado} />
+                    </div>
                   </td>
-                  <td style={celula}>{m.operadorId ?? "-"}</td>
-                  <td style={celula}>{m.ativo ? "Sim" : "Não"}</td>
-                  <td style={{ ...celula, display: "flex", gap: 6 }}>
-                    <button onClick={() => iniciarEdicao(m)} disabled={loading}>
-                      Editar
-                    </button>
-                    {m.ativo ? (
-                      <button onClick={() => desativar(m)} disabled={loading}>
-                        Desativar
-                      </button>
-                    ) : (
-                      <button onClick={() => ativar(m)} disabled={loading}>
-                        Reativar
-                      </button>
-                    )}
+                  <td className="px-3 py-2">{m.operadorId ?? "-"}</td>
+                  <td className="px-3 py-2">
+                    <StatusBadge ativo={m.ativo} />
+                  </td>
+                  <td className="px-3 py-2">
+                    <Acoes
+                      m={m}
+                      disabled={loading}
+                      onEditar={iniciarEdicao}
+                      onDesativar={desativar}
+                      onAtivar={ativar}
+                    />
                   </td>
                 </tr>
               ))}
-              {maquinas.length === 0 && (
+              {visiveis.length === 0 && (
                 <tr>
-                  <td style={celula} colSpan={8}>
-                    Nenhuma máquina carregada.
+                  <td colSpan={8} className="px-3 py-4 text-center text-zinc-500">
+                    {vazio}
                   </td>
                 </tr>
               )}
@@ -243,20 +391,34 @@ export default function MaquinasPage() {
       </section>
 
       {/* CRIAR / EDITAR */}
-      <section style={{ display: "grid", gap: 8 }}>
-        <h2 style={{ margin: 0 }}>
+      <section className="grid gap-3">
+        <h2 className="text-lg font-medium">
           {editandoId ? `Editar máquina #${editandoId}` : "Cadastrar máquina"}
         </h2>
-        <form onSubmit={salvar} style={{ display: "grid", gap: 8, maxWidth: 420 }}>
-          <input placeholder="Nome" value={form.nome} onChange={(e) => atualizarCampo("nome", e.target.value)} required />
-          <input placeholder="Código" value={form.codigo} onChange={(e) => atualizarCampo("codigo", e.target.value)} required />
+        <form onSubmit={salvar} className="grid w-full gap-3 sm:max-w-md">
+          <input
+            className={input}
+            placeholder="Nome"
+            value={form.nome}
+            onChange={(e) => atualizarCampo("nome", e.target.value)}
+            required
+          />
+          <input
+            className={input}
+            placeholder="Código"
+            value={form.codigo}
+            onChange={(e) => atualizarCampo("codigo", e.target.value)}
+            required
+          />
           <textarea
+            className={input}
             placeholder="Especificações"
             value={form.especificacoes}
             onChange={(e) => atualizarCampo("especificacoes", e.target.value)}
             rows={3}
           />
           <select
+            className={input}
             value={form.estadoAtual}
             onChange={(e) => atualizarCampo("estadoAtual", e.target.value as EstadoMaquina)}
           >
@@ -266,7 +428,12 @@ export default function MaquinasPage() {
               </option>
             ))}
           </select>
-          <select value={form.setorId} onChange={(e) => atualizarCampo("setorId", e.target.value)} required>
+          <select
+            className={input}
+            value={form.setorId}
+            onChange={(e) => atualizarCampo("setorId", e.target.value)}
+            required
+          >
             <option value="">Selecione o setor</option>
             {setores.map((s) => (
               <option key={s.id} value={s.id}>
@@ -275,38 +442,24 @@ export default function MaquinasPage() {
             ))}
           </select>
           <input
+            className={input}
             type="number"
             min={1}
             placeholder="ID do operador (opcional)"
             value={form.operadorId}
             onChange={(e) => atualizarCampo("operadorId", e.target.value)}
           />
-          <div style={{ display: "flex", gap: 8 }}>
-            <button disabled={loading}>{editandoId ? "Salvar" : "Cadastrar"}</button>
+          <div className="flex gap-2">
+            <button disabled={loading} className={btnPrimario}>
+              {editandoId ? "Salvar" : "Cadastrar"}
+            </button>
             {editandoId && (
-              <button type="button" onClick={cancelarEdicao}>
+              <button type="button" onClick={cancelarEdicao} className={btnSecundario}>
                 Cancelar
               </button>
             )}
           </div>
         </form>
-      </section>
-
-      {/* BUSCAR POR ID */}
-      <section style={{ display: "grid", gap: 8 }}>
-        <h2 style={{ margin: 0 }}>Buscar por ID</h2>
-        <form onSubmit={buscarPorId} style={{ display: "flex", gap: 8 }}>
-          <input
-            type="number"
-            min={1}
-            placeholder="ID"
-            value={idBusca}
-            onChange={(e) => setIdBusca(e.target.value)}
-            required
-          />
-          <button disabled={loading}>Buscar</button>
-        </form>
-        {encontrada && <pre>{JSON.stringify(encontrada, null, 2)}</pre>}
       </section>
     </main>
   );

@@ -17,8 +17,7 @@ export type EstagioProducao =
   | "EM_PRODUCAO"
   | "PAUSADA"
   | "CONCLUIDA"
-  | "CANCELADA"; 
-
+  | "CANCELADA";
 
 export interface Usuario {
   id: number;
