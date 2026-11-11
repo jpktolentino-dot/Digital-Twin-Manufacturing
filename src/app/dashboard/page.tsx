@@ -24,20 +24,20 @@ const PERIODOS = [
 ];
 
 const corEstado: Record<string, string> = {
-  OPERANDO: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300",
-  PARADA: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-  FALHA: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300",
-  MANUTENCAO: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
-  INDISPONIVEL: "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+  OPERANDO: "bg-green-100 text-green-700 font-semibold dark:bg-green-700 dark:text-green-200",
+  PARADA: "bg-amber-100 text-amber-800 font-semibold dark:bg-amber-700 dark:text-amber-200",
+  FALHA: "bg-red-100 text-red-700 font-semibold dark:bg-red-800 dark:text-red-200",
+  MANUTENCAO: "bg-blue-100 text-blue-700 font-semibold dark:bg-blue-700 dark:text-blue-200",
+  INDISPONIVEL: "bg-zinc-200 text-zinc-700 font-semibold dark:bg-zinc-800 dark:text-zinc-300",
 };
-const corPadrao = "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300";
+const corPadrao = "bg-zinc-200 text-zinc-700 font-semibold dark:bg-zinc-800 dark:text-zinc-300";
 
 const corEstagio: Record<string, string> = {
   PLANEJADA: corPadrao,
-  EM_PRODUCAO: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
-  PAUSADA: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-  CONCLUIDA: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300",
-  CANCELADA: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300",
+  EM_PRODUCAO: "bg-blue-100 text-blue-700 font-semibold dark:bg-blue-950 dark:text-blue-300",
+  PAUSADA: "bg-amber-100 text-amber-800 font-semibold dark:bg-amber-950 dark:text-amber-300",
+  CONCLUIDA: "bg-green-100 text-green-700 font-semibold dark:bg-green-950 dark:text-green-300",
+  CANCELADA: "bg-red-100 text-red-700 font-semibold dark:bg-red-950 dark:text-red-300",
 };
 
 const card =
@@ -209,7 +209,7 @@ export default function PainelMaquinaPage() {
   const totalBarras = barras.reduce((s, b) => s + b.seg, 0);
 
   return (
-    <div className="flex h-screen flex-col bg-white text-zinc-900 dark:bg-slate-950 dark:text-zinc-100">
+    <div className="flex h-[calc(100dvh-4rem)] flex-col bg-white text-zinc-900 dark:bg-slate-950 dark:text-zinc-100">
       {/* Barra superior */}
       <header className="flex flex-wrap items-center gap-3 border-b-2 border-zinc-400 px-6 py-3 dark:border-slate-800">
         <h1 className="text-lg font-bold">Painel da máquina</h1>
@@ -240,7 +240,7 @@ export default function PainelMaquinaPage() {
         {erroGeral && <span className="text-sm text-red-600">Erro: {erroGeral}</span>}
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-y-auto overflow-hidden">
         {/* COLUNA ESQUERDA: máquina + KPIs */}
         <aside className="w-[380px] shrink-0 space-y-6 overflow-y-auto border-r-2 border-zinc-400 p-6 dark:border-slate-800">
           <div>
@@ -403,7 +403,7 @@ export default function PainelMaquinaPage() {
                 {ultimosEventos.map((ev) => (
                   <li key={ev.id} className={`${card} p-3 text-sm`}>
                     <div className="flex items-center justify-between gap-2">
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-700 dark:text-amber-300">
                         {ev.categoria}
                       </span>
                       <span className="text-xs text-zinc-500">{formatarData(ev.dataHora)}</span>

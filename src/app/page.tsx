@@ -8,6 +8,7 @@ import { produtosService } from "./services/products-service";
 import { kpisService } from "./services/kpis-service";
 import { historicosMaquinasService } from "./services/machine-history";
 import { eventosService } from "./services/events-service";
+import icon  from "../../../jermam/assets/Screenshot_3-removebg-preview.png";
 import type {
   Evento,
   HistoricoMaquina,
@@ -210,6 +211,7 @@ export default function PainelMaquinaPage() {
 
   return (
     <div className="flex h-screen flex-col bg-white text-zinc-900 dark:bg-slate-950 dark:text-zinc-100">
+      <link rel="icon" href={icon.src} sizes="any" />
       {/* Barra superior */}
       <header className="flex flex-wrap items-center gap-3 border-b-2 border-zinc-400 px-6 py-3 dark:border-slate-800">
         <h1 className="text-lg font-bold">Painel da máquina</h1>

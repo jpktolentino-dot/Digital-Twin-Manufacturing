@@ -15,7 +15,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
+import Link from "next/link";
 
 function Header() {
 
@@ -45,11 +45,11 @@ function Header() {
     const inicial = email ? email.charAt(0).toUpperCase() : "?";
     return (
         <>
-            <header className="top-0 sticky w-full bg-background pointer-events-auto ">
+            <header className="top-0 sticky w-full bg-white dark:bg-background pointer-events-auto">
                 <div className="max-w-full mx-auto border-b dark:border-zinc-800 border-zinc-400 px-4 sm:px-6 lg:px-4 ">
                     <div className="flex items-center justify-between md:justify-around h-16 md:grid md:grid-cols-3">
 
-                        <div className="flex justify-self-start items-center gap-3">
+                        <Link href="/home" className="flex justify-self-start items-center gap-3">
 
                             <div className='bg-blue-500 p-2 rounded-lg'>
                                 <RobotArm className='text-white' />
@@ -60,7 +60,7 @@ function Header() {
                                 </h1>
                                 <p className='text-xs text-zinc-500'> Jermam v1.0</p>
                             </div>
-                        </div>
+                        </Link>
 
                         <nav className="hidden md:flex justify-center items-center gap-1 lg:gap-8 font-medium text-[1rem] w-full">
 

@@ -11,7 +11,7 @@ type Modo = "setup" | "usuario";
 const input =
   "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
 const btn =
-  "rounded-md px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50";
+  "rounded-md px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer";
 const btnPrimario = `${btn} bg-blue-600 text-white hover:bg-blue-700`;
 
 export default function CadastroPage() {

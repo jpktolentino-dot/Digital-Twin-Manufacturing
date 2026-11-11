@@ -11,17 +11,17 @@ const input =
   "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
 const btn =
   "rounded-md px-3 py-1.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50";
-const btnPrimario = `${btn} bg-blue-600 text-white hover:bg-blue-700`;
-const btnSecundario = `${btn} border border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800`;
-const btnPerigo = `${btn} border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950`;
+const btnPrimario = `${btn} bg-blue-600 text-white hover:bg-blue-700 cursor-pointer`;
+const btnSecundario = `${btn} border border-zinc-300 text-zinc-700 bg-white dark:bg-background hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800 cursor-pointer`;
+const btnPerigo = `${btn} border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950 cursor-pointer`;
 const selectPequeno =
   "rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900";
 
 const corEstado: Record<string, string> = {
-  OPERANDO: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300",
-  PARADA: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-  FALHA: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300",
-  MANUTENCAO: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+  OPERANDO: "bg-green-100 text-green-700 font-semibold dark:bg-green-700 dark:text-green-200",
+  PARADA: "bg-amber-100 text-amber-800 font-semibold dark:bg-amber-700 dark:text-amber-200",
+  FALHA: "bg-red-100 text-red-700 font-semibold dark:bg-red-700 dark:text-red-200",
+  MANUTENCAO: "bg-blue-100 text-blue-700 font-semibold dark:bg-blue-700 dark:text-blue-200",
 };
 const corPadrao = "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300";
 
@@ -54,11 +54,10 @@ function EstadoBadge({ valor }: { valor: string }) {
 function StatusBadge({ ativo }: { ativo: boolean }) {
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-        ativo
-          ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
-          : "bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
-      }`}
+      className={`rounded-full px-2 py-0.5 text-xs font-medium ${ativo
+          ? "bg-green-100 text-green-700 font-semibold dark:bg-green-700 dark:text-green-200"
+          : "bg-zinc-200 text-zinc-600 font-semibold dark:bg-zinc-800 dark:text-zinc-400"
+        }`}
     >
       {ativo ? "Ativa" : "Inativa"}
     </span>
@@ -169,7 +168,7 @@ export default function MaquinasPage() {
   }, [carregar]);
 
   useEffect(() => {
-    setoresService.listar().then(setSetores).catch(() => {});
+    setoresService.listar().then(setSetores).catch(() => { });
   }, []);
 
   const visiveis = useMemo(() => {
@@ -337,7 +336,7 @@ export default function MaquinasPage() {
 
         {/* Tabela (md em diante) */}
         <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 md:block dark:border-zinc-800">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left bg-white dark:bg-zinc-950 text-sm">
             <thead className="bg-zinc-50 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
               <tr>
                 <th className="px-3 py-2 font-medium">ID</th>
@@ -347,7 +346,7 @@ export default function MaquinasPage() {
                 <th className="px-3 py-2 font-medium">Estado</th>
                 <th className="px-3 py-2 font-medium">Operador</th>
                 <th className="px-3 py-2 font-medium">Status</th>
-                <th className="px-3 py-2 font-medium">Ações</th>
+                <th className="px-3 py-2 font-medium text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
@@ -368,13 +367,15 @@ export default function MaquinasPage() {
                     <StatusBadge ativo={m.ativo} />
                   </td>
                   <td className="px-3 py-2">
-                    <Acoes
-                      m={m}
-                      disabled={loading}
-                      onEditar={iniciarEdicao}
-                      onDesativar={desativar}
-                      onAtivar={ativar}
-                    />
+                    <div className="flex justify-end">
+                      <Acoes
+                        m={m}
+                        disabled={loading}
+                        onEditar={iniciarEdicao}
+                        onDesativar={desativar}
+                        onAtivar={ativar}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -395,7 +396,7 @@ export default function MaquinasPage() {
         <h2 className="text-lg font-medium">
           {editandoId ? `Editar máquina #${editandoId}` : "Cadastrar máquina"}
         </h2>
-        <form onSubmit={salvar} className="grid w-full gap-3 sm:max-w-md">
+        <form onSubmit={salvar} className="grid w-full gap-3 ">
           <input
             className={input}
             placeholder="Nome"

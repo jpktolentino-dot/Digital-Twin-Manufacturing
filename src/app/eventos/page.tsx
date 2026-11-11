@@ -11,8 +11,8 @@ const input =
   "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
 const btn =
   "rounded-md px-3 py-1.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50";
-const btnPrimario = `${btn} bg-blue-600 text-white hover:bg-blue-700`;
-const btnSecundario = `${btn} border border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800`;
+const btnPrimario = `${btn} bg-blue-600 text-white hover:bg-blue-700 cursor-pointer`;
+const btnSecundario = `${btn} border border-zinc-300 text-zinc-700 bg-white dark:bg-background hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800 cursor-pointer`;
 const selectPequeno =
   "rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900";
 
@@ -25,11 +25,19 @@ function agoraLocal(): string {
   return d.toISOString().slice(0, 16);
 }
 
+function paraLocalDateTime(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return (
+    `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}` +
+    `T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
+  );
+}
+
 const formatarData = (iso: string) => new Date(iso).toLocaleString("pt-BR");
 
 function CategoriaBadge({ valor }: { valor: string }) {
   return (
-    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-700 dark:text-amber-200">
       {valor}
     </span>
   );
@@ -97,9 +105,9 @@ export default function EventosPage() {
 
   // dados dos selects
   useEffect(() => {
-    maquinasService.listar().then(setMaquinas).catch(() => {});
-    ordensProducaoService.listar().then(setOrdens).catch(() => {});
-    usuariosService.listar().then(setUsuarios).catch(() => {});
+    maquinasService.listar().then(setMaquinas).catch(() => { });
+    ordensProducaoService.listar().then(setOrdens).catch(() => { });
+    usuariosService.listar().then(setUsuarios).catch(() => { });
   }, []);
 
   const visiveis = useMemo(() => {
@@ -129,7 +137,7 @@ export default function EventosPage() {
         categoria,
         descricao,
         impactoEstimado: Number(impacto),
-        dataHora: new Date(dataHora).toISOString(),
+        dataHora: paraLocalDateTime(new Date(dataHora)),
         maquinaId: Number(maquinaId),
         ordemProducaoId: Number(ordemId),
         usuarioId: Number(usuarioId),
@@ -250,7 +258,7 @@ export default function EventosPage() {
 
         {/* Tabela (md em diante) */}
         <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 md:block dark:border-zinc-800">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left bg-white dark:bg-background text-sm">
             <thead className="bg-zinc-50 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
               <tr>
                 <th className="px-3 py-2 font-medium">ID</th>
@@ -298,7 +306,7 @@ export default function EventosPage() {
       {/* REGISTRAR */}
       <section className="grid gap-3">
         <h2 className="text-lg font-medium">Registrar evento</h2>
-        <form onSubmit={registrar} className="grid w-full gap-3 sm:max-w-md">
+        <form onSubmit={registrar} className="grid w-full gap-3 ">
           <input
             className={input}
             placeholder="Categoria (ex.: FALHA, PARADA, QUALIDADE)"

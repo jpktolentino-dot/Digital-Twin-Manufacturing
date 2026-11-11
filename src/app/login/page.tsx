@@ -21,7 +21,7 @@ export default function Home() {
     setErro(null);
     try {
       await authService.login(email, senha);
-      router.push("/dashboard");
+      router.push("/home");
       router.refresh();
     } catch (err) {
       setErro(err instanceof Error ? err.message : "Erro inesperado");
@@ -32,6 +32,7 @@ export default function Home() {
 
   return (
     <>
+      <link rel="icon" href="/Screenshot_3-removebg-preview.png" sizes="any" />
       <section className="w-screen h-screen flex overflow-hidden dark:bg-zinc-950 bg-[#f0f0f0] transition-colors duration-300 relative">
 
         <div className='absolute right-4 top-4'>
@@ -42,7 +43,7 @@ export default function Home() {
             <div className="text-center flex items-center justify-center flex-col space-y-2">
               {/* <img  alt="logo" className='w-32 dark:brightness-110' /> */}
               <div className="bg-blue-700 w-18 aspect-square relative flex items-center justify-center rounded-xl">
-                  <RobotArm size={36} className="text-white" />
+                <RobotArm size={36} className="text-white" />
               </div>
               <h2 className="text-3xl font-bold text-slate-900 dark:text-zinc-100">Acesse o Sistema</h2>
               <p className="text-slate-500 text-sm dark:text-zinc-400">Entre com suas credenciais do sistema</p>
@@ -64,7 +65,7 @@ export default function Home() {
               <div className="space-y-1 flex flex-col gap-1" >
                 <label className="text-sm font-medium text-slate-700 ml-1 dark:text-zinc-300">Senha</label>
                 <Input
-                  placeholder="******"
+                  placeholder="••••••••"
                   type="password"
                   className="h-10"
                   value={senha}

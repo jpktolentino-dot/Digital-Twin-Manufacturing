@@ -8,15 +8,15 @@ const input =
   "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
 const btn =
   "rounded-md px-3 py-1.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50";
-const btnPrimario = `${btn} bg-blue-600 text-white hover:bg-blue-700`;
-const btnSecundario = `${btn} border border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800`;
-const btnPerigo = `${btn} border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950`;
+const btnPrimario = `${btn} bg-blue-600 text-white hover:bg-blue-700 cursor-pointer`;
+const btnSecundario = `${btn} border border-zinc-300 text-zinc-700 bg-white dark:bg-background hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800 cursor-pointer`;
+const btnPerigo = `${btn} border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950 cursor-pointer`;
 
 function StatusBadge({ ativo }: { ativo: boolean }) {
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-xs font-medium ${ativo
-        ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
+      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${ativo
+        ? "bg-green-100 text-green-700 dark:bg-green-700 dark:text-green-200"
         : "bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
         }`}
     >
@@ -28,9 +28,9 @@ function StatusBadge({ ativo }: { ativo: boolean }) {
 function TipoBadge({ tipo }: { tipo: TipoUsuario }) {
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-xs font-medium ${tipo === "ADMINISTRADOR"
-        ? "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
-        : "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${tipo === "ADMINISTRADOR"
+        ? "bg-purple-100 text-purple-700 dark:bg-purple-800 dark:text-purple-300"
+        : "bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-300"
         }`}
     >
       {tipo}
@@ -213,7 +213,7 @@ export default function UsuariosPage() {
 
         {/* Tabela (md em diante) */}
         <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 md:block dark:border-zinc-800">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left bg-white dark:bg-zinc-950 text-sm">
             <thead className="bg-zinc-50 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
               <tr>
                 <th className="px-3 py-2 font-medium">ID</th>
@@ -221,7 +221,7 @@ export default function UsuariosPage() {
                 <th className="px-3 py-2 font-medium">E-mail</th>
                 <th className="px-3 py-2 font-medium">Tipo</th>
                 <th className="px-3 py-2 font-medium">Status</th>
-                <th className="px-3 py-2 font-medium">Ações</th>
+                <th className="px-3 py-2 font-medium text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
@@ -237,7 +237,9 @@ export default function UsuariosPage() {
                     <StatusBadge ativo={u.ativo} />
                   </td>
                   <td className="px-3 py-2">
-                    <Acoes u={u} />
+                    <div className="flex justify-end">
+                      <Acoes u={u} />
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -259,7 +261,7 @@ export default function UsuariosPage() {
       {editando && (
         <section className="grid gap-3">
           <h2 className="text-lg font-medium">Editar usuário #{editando.id}</h2>
-          <form onSubmit={salvarEdicao} className="grid w-full gap-3 sm:max-w-md">
+          <form onSubmit={salvarEdicao} className="grid w-full gap-3 ">
             <input className={input} placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
             <input
               className={input}

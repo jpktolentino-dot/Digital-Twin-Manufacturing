@@ -19,26 +19,25 @@ const input =
   "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
 const btn =
   "rounded-md px-3 py-1.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50";
-const btnPrimario = `${btn} bg-blue-600 text-white hover:bg-blue-700`;
-const btnSecundario = `${btn} border border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800`;
-const btnPerigo = `${btn} border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950`;
+const btnPrimario = `${btn} bg-blue-600 text-white hover:bg-blue-700 cursor-pointer`;
+const btnSecundario = `${btn} border border-zinc-300 text-zinc-700 bg-white dark:bg-background hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800 cursor-pointer`;
+const btnPerigo = `${btn} border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950 cursor-pointer`;
 const selectPequeno =
   "rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-xs dark:border-zinc-700 dark:bg-zinc-900";
 
 const corEstagio: Record<string, string> = {
-  PLANEJADA: "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
-  EM_PRODUCAO: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
-  PAUSADA: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-  CONCLUIDA: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300",
-  CANCELADA: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300",
+  PLANEJADA: "bg-zinc-200 text-zinc-700 font-semibold dark:bg-zinc-800 dark:text-zinc-200",
+  EM_PRODUCAO: "bg-blue-100 text-blue-700 font-semibold dark:bg-blue-700 dark:text-blue-200",
+  PAUSADA: "bg-amber-100 text-amber-800 font-semibold dark:bg-amber-700 dark:text-amber-200",
+  CONCLUIDA: "bg-green-100 text-green-700 font-semibold dark:bg-green-700 dark:text-green-200",
+  CANCELADA: "bg-red-100 text-red-700 font-semibold dark:bg-red-700 dark:text-red-300",
 };
 
 function EstagioBadge({ valor }: { valor: string }) {
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-        corEstagio[valor] ?? corEstagio.PLANEJADA
-      }`}
+      className={`rounded-full px-2 py-0.5 text-xs font-medium ${corEstagio[valor] ?? corEstagio.PLANEJADA
+        }`}
     >
       {valor}
     </span>
@@ -150,9 +149,9 @@ export default function OrdensProducaoPage() {
 
   // dados dos selects
   useEffect(() => {
-    produtosService.listar().then(setProdutos).catch(() => {});
-    maquinasService.listar().then(setMaquinas).catch(() => {});
-    usuariosService.listar().then(setUsuarios).catch(() => {});
+    produtosService.listar().then(setProdutos).catch(() => { });
+    maquinasService.listar().then(setMaquinas).catch(() => { });
+    usuariosService.listar().then(setUsuarios).catch(() => { });
   }, []);
 
   const visiveis = useMemo(() => {
@@ -229,7 +228,7 @@ export default function OrdensProducaoPage() {
   const maquinasAtivas = maquinas.filter((m) => m.ativo);
 
   return (
-    <main className="mx-auto grid max-w-6xl gap-6 px-4 py-6 text-zinc-900 sm:py-10 dark:text-zinc-100">
+    <main className="mx-auto grid max-w-6xl gap-6 px-4 py-6 text-zinc-900 sm:py-10 dark:text-zinc-100 overflow-y-auto">
       <h1 className="text-xl font-semibold sm:text-2xl">Ordens de produção</h1>
 
       {erro && (
@@ -305,8 +304,8 @@ export default function OrdensProducaoPage() {
 
         {/* Tabela (md em diante) */}
         <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 md:block dark:border-zinc-800">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-zinc-50 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
+          <table className="w-full text-left bg-white dark:bg-zinc-950 text-sm">
+            <thead className="bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
               <tr>
                 <th className="px-3 py-2 font-medium">ID</th>
                 <th className="px-3 py-2 font-medium">Número</th>
@@ -315,7 +314,7 @@ export default function OrdensProducaoPage() {
                 <th className="px-3 py-2 font-medium">Operador</th>
                 <th className="px-3 py-2 font-medium">Máquinas</th>
                 <th className="px-3 py-2 font-medium">Estágio</th>
-                <th className="px-3 py-2 font-medium">Ações</th>
+                <th className="px-3 py-2 font-medium text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
@@ -336,12 +335,14 @@ export default function OrdensProducaoPage() {
                     </div>
                   </td>
                   <td className="px-3 py-2">
-                    <Acoes
-                      o={o}
-                      disabled={loading}
-                      onEditar={iniciarEdicao}
-                      onCancelar={cancelar}
-                    />
+                    <div className="flex justify-end">
+                      <Acoes
+                        o={o}
+                        disabled={loading}
+                        onEditar={iniciarEdicao}
+                        onCancelar={cancelar}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -362,7 +363,7 @@ export default function OrdensProducaoPage() {
         <h2 className="text-lg font-medium">
           {editandoId ? `Editar ordem #${editandoId}` : "Criar ordem de produção"}
         </h2>
-        <form onSubmit={salvar} className="grid w-full gap-3 sm:max-w-md">
+        <form onSubmit={salvar} className="grid w-full gap-3 ">
           <input
             className={input}
             placeholder="Número da ordem"
@@ -408,7 +409,7 @@ export default function OrdensProducaoPage() {
             ))}
           </select>
 
-          <fieldset className="grid gap-2 rounded-md border border-zinc-300 p-3 dark:border-zinc-700">
+          <fieldset className="grid gap-2 rounded-md border bg-white dark:bg-background border-zinc-300 p-3 dark:border-zinc-700">
             <legend className="px-1 text-sm text-zinc-600 dark:text-zinc-400">
               Máquinas (selecione ao menos uma)
             </legend>
@@ -439,6 +440,6 @@ export default function OrdensProducaoPage() {
           </div>
         </form>
       </section>
-    </main>
+    </main >
   );
 }

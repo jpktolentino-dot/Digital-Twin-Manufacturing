@@ -12,7 +12,7 @@ export function proxy(req: NextRequest) {
 
   // Já logado: /login vai para a página principal
   if (token && ehLogin) {
-    return NextResponse.redirect(new URL("/", req.url));
+    return NextResponse.redirect(new URL("/home", req.url));
   }
 
   return NextResponse.next();
