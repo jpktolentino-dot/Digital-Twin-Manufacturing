@@ -4,6 +4,9 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useTheme } from 'next-themes';
 import { Sun, Moon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { authService } from '../app/services/auth';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -12,7 +15,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
+import Link from "next/link";
 
 function Header() {
 
@@ -20,13 +23,33 @@ function Header() {
 
     const isDark = resolvedTheme === "dark";
 
+    const router = useRouter();
+    const [email, setEmail] = useState<string | null>(null);
+
+    useEffect(() => {
+        fetch("/auth/me")
+            .then((r) => (r.ok ? r.json() : null))
+            .then((d) => setEmail(d?.email ?? null))
+            .catch(() => setEmail(null));
+    }, []);
+
+    async function sair() {
+        try {
+            await authService.logout();
+        } finally {
+            router.push("/login");
+            router.refresh();
+        }
+    }
+
+    const inicial = email ? email.charAt(0).toUpperCase() : "?";
     return (
         <>
-            <header className="top-0 sticky w-full bg-background pointer-events-auto ">
+            <header className="top-0 sticky w-full bg-white dark:bg-background pointer-events-auto">
                 <div className="max-w-full mx-auto border-b dark:border-zinc-800 border-zinc-400 px-4 sm:px-6 lg:px-4 ">
                     <div className="flex items-center justify-between md:justify-around h-16 md:grid md:grid-cols-3">
 
-                        <div className="flex justify-self-start items-center gap-3">
+                        <Link href="/home" className="flex justify-self-start items-center gap-3">
 
                             <div className='bg-blue-500 p-2 rounded-lg'>
                                 <RobotArm className='text-white' />
@@ -37,26 +60,13 @@ function Header() {
                                 </h1>
                                 <p className='text-xs text-zinc-500'> Jermam v1.0</p>
                             </div>
-                        </div>
+                        </Link>
 
                         <nav className="hidden md:flex justify-center items-center gap-1 lg:gap-8 font-medium text-[1rem] w-full">
 
                         </nav>
                         <div className="col-start-3 flex justify-end items-center gap-2 relative">
-                            <div className="relative w-full max-w-xs">
-                                <Input
-                                    type="search"
-                                    placeholder="Buscar por id ou nome..."
-                                    className="pr-10"
-                                />
-                                <button
-                                    type="button"
-                                    className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
-                                    aria-label="Buscar"
-                                >
-                                    <Search className="size-4" />
-                                </button>
-                            </div>
+                            
                             <DropdownMenu>
                                 <DropdownMenuTrigger
                                     render={
@@ -66,7 +76,7 @@ function Header() {
                                         />
                                     }
                                 >
-                                    E
+                                    {inicial}
                                 </DropdownMenuTrigger>
 
                                 <DropdownMenuContent align="end" className="w-48 z-100 ">
@@ -74,8 +84,8 @@ function Header() {
                                         {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
                                         {isDark ? "Tema claro" : "Tema escuro"}
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-red-600 cursor-pointer">
-                                        <LogOut/>
+                                    <DropdownMenuItem onClick={sair} className="text-red-600 cursor-pointer">
+                                        <LogOut />
                                         Logout
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
